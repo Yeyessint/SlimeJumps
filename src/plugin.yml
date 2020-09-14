@@ -1,0 +1,6 @@
+main: net.licory.slimejumps.SlimeJumps
+name: SlimeJumps
+version: 1.0
+author: Ye2ye2123
+commands:
+    config:
