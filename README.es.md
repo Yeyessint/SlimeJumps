@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/banner.png" alt="SlimeJumps — jump pads, rutas de vuelo y doble salto" width="100%"></p>
+
 # SlimeJumps
 
 [![Build](https://github.com/Yeyessint/SlimeJumps/actions/workflows/build.yml/badge.svg)](https://github.com/Yeyessint/SlimeJumps/actions/workflows/build.yml)
