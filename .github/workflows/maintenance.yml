@@ -1,0 +1,22 @@
+name: Maintenance
+
+on:
+  workflow_dispatch:
+    inputs:
+      delete-branch:
+        description: 'Branch to delete'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  delete-branch:
+    name: Delete branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Delete branch
+        run: git push origin --delete "${{ inputs.delete-branch }}"

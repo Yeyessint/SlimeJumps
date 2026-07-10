@@ -1,0 +1,148 @@
+# SlimeJumps configuration
+# Project: https://github.com/Yeyessint/SlimeJumps
+
+# Language of the plugin messages.
+# Bundled languages: en (English), es (Spanish).
+# You can add your own by creating messages_<code>.yml in this folder.
+language: en
+
+# Check GitHub for new releases on startup and notify admins on join.
+update-checker: true
+
+stats:
+  # Count how many times each pad is used (see /sj stats).
+  enabled: true
+
+# Anonymous bStats usage metrics (requires a registered service id).
+metrics: true
+
+# Worlds where jump pads, slime block mode and routes are disabled.
+disabled-worlds: []
+#  - creative_world
+#  - build_world
+
+pads:
+  # Default horizontal launch strength for newly created pads.
+  default-power: 1.6
+  # Default vertical (upwards) launch velocity for newly created pads.
+  default-vertical: 1.0
+  # Absolute maximum value accepted for power/vertical in commands.
+  max-power: 10.0
+  # Minimum time between launches per player, in milliseconds.
+  cooldown-ms: 500
+  # Cancel the fall damage caused by a pad launch.
+  prevent-fall-damage: true
+  # How long (ms) after a launch the fall damage protection lasts.
+  fall-protection-ms: 10000
+  # When true, sneaking players walk over pads without being launched
+  # (handy for staff while building).
+  ignore-sneaking: false
+
+launch:
+  sound:
+    enabled: true
+    # Sound key played when a player is launched.
+    # Any key from https://minecraft.wiki/w/Sounds.json works.
+    name: entity.ender_dragon.flap
+    volume: 1.0
+    pitch: 1.0
+  particles:
+    enabled: true
+    # Particle burst shown when a player is launched.
+    # Names from the Bukkit Particle enum (1.21.x), e.g. CLOUD, POOF, CRIT.
+    name: CLOUD
+    count: 20
+
+ambient-particles:
+  # Idle particles displayed above every registered pad.
+  enabled: true
+  name: HAPPY_VILLAGER
+  count: 8
+  # How often the particles are spawned, in server ticks (20 = 1 second).
+  interval-ticks: 10
+
+holograms:
+  # Height of hologram texts above the pad block (set per pad with
+  # /sj sethologram; use | to separate lines).
+  height: 1.6
+
+routes:
+  # Flight speed along routes, in blocks per tick (20 ticks = 1 second).
+  speed: 1.2
+  # Abort a flight that has not finished after this many seconds.
+  timeout-seconds: 30
+  # Players are immune to all damage while flying a route.
+  protect-during-flight: true
+  # Fall damage grace period (ms) after landing at the end of a route.
+  landing-protection-ms: 5000
+  trail:
+    # Particle trail left behind players while they fly a route.
+    enabled: true
+    name: END_ROD
+    count: 3
+  flight-sound:
+    # Whoosh played repeatedly while flying a route.
+    enabled: true
+    name: entity.phantom.flap
+    volume: 0.7
+    pitch: 1.0
+    interval-ticks: 8
+  arrival:
+    # Effects played when a player reaches the end of a route.
+    sound:
+      enabled: true
+      name: entity.player.levelup
+      volume: 1.0
+      pitch: 1.2
+    particles:
+      enabled: true
+      name: FIREWORK
+      count: 30
+
+# Presets usable with /sj create <name> --preset <preset>.
+# Each preset may set: power, vertical, sound, particle, cooldown-ms,
+# message, effect, effect-duration and effect-amplifier.
+# Add as many of your own as you like.
+presets:
+  parkour:
+    power: 1.2
+    vertical: 0.8
+    sound: entity.rabbit.jump
+    particle: CRIT
+    cooldown-ms: 0
+  cannon:
+    power: 4.0
+    vertical: 1.6
+    sound: entity.generic.explode
+    particle: EXPLOSION
+  bounce:
+    power: 0.0
+    vertical: 1.4
+    sound: block.slime_block.hit
+    particle: ITEM_SLIME
+
+double-jump:
+  # Lobby-style double jump: pressing the jump key in mid-air boosts
+  # players (permission: slimejumps.doublejump). Disabled in creative
+  # and spectator mode, and compatible with /fly from other plugins.
+  enabled: false
+  power: 0.9
+  vertical: 0.9
+  cooldown-ms: 500
+  prevent-fall-damage: true
+  sound:
+    enabled: true
+    name: entity.bat.takeoff
+    volume: 1.0
+    pitch: 1.0
+  particles:
+    enabled: true
+    name: CLOUD
+    count: 15
+
+slime-block-mode:
+  # Legacy mode: when enabled, EVERY slime block in the world acts as a
+  # jump pad, without needing to register it with /slimejumps create.
+  enabled: false
+  power: 1.6
+  vertical: 1.0

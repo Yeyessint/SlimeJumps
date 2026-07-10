@@ -1,0 +1,24 @@
+name: SlimeJumps
+version: '${project.version}'
+main: net.licory.slimejumps.SlimeJumpsPlugin
+api-version: '1.21'
+author: Yeyessint
+description: Configurable jump pads for lobbies and hubs.
+website: https://github.com/Yeyessint/SlimeJumps
+
+commands:
+  slimejumps:
+    description: Manage SlimeJumps jump pads.
+    usage: /<command> help
+    aliases: [sj, jumppads]
+
+permissions:
+  slimejumps.admin:
+    description: Grants access to all SlimeJumps commands.
+    default: op
+  slimejumps.use:
+    description: Allows being launched by jump pads.
+    default: true
+  slimejumps.doublejump:
+    description: Allows double jumping when the feature is enabled.
+    default: true

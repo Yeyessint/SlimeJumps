@@ -1,0 +1,20 @@
+# Build output
+target/
+out/
+dependency-reduced-pom.xml
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+*.ipr
+*.iws
+.nb-gradle/
+nbproject/
+
+# OS files
+.DS_Store
+Thumbs.db
