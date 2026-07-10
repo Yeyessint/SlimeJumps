@@ -1,0 +1,42 @@
+# SlimeJumps messages — English
+# Color codes use '&'. {placeholders} are replaced by the plugin.
+
+prefix: '&7SlimeJumps &a» '
+
+no-permission: '{prefix}&cYou do not have permission to do that.'
+players-only: '{prefix}&cThis command can only be used by players.'
+reloaded: '{prefix}&aConfiguration and pads reloaded.'
+
+pad-created: '{prefix}&ePad &a{name}&e created &7(power {power}, vertical {vertical})&e.'
+pad-exists: '{prefix}&cA pad named &e{name}&c (or a pad on this block) already exists.'
+pad-removed: '{prefix}&ePad &a{name}&e removed.'
+pad-not-found: '{prefix}&cNo pad named &e{name}&c was found.'
+pad-updated: '{prefix}&ePad &a{name}&e updated: {setting} is now &a{value}&e.'
+pad-teleported: '{prefix}&eTeleported to pad &a{name}&e.'
+pad-world-unloaded: '{prefix}&cThe world of pad &e{name}&c is not loaded.'
+
+invalid-number: '{prefix}&c''{input}'' is not a valid number.'
+invalid-name: '{prefix}&cPad names may only contain letters, numbers, ''-'' and ''_'' (max 32 characters).'
+
+list-empty: '{prefix}&eThere are no jump pads yet. Create one with &a/sj create <name>&e.'
+list-header: '{prefix}&eJump pads (&a{count}&e):'
+list-entry: '&7 • &a{name} &7— {world} ({x}, {y}, {z}) &epower {power}&7, &evertical {vertical}'
+
+usage-create: '{prefix}&cUsage: &e/sj create <name> [power] [vertical]'
+usage-remove: '{prefix}&cUsage: &e/sj remove <name>'
+usage-info: '{prefix}&cUsage: &e/sj info <name>'
+usage-tp: '{prefix}&cUsage: &e/sj tp <name>'
+usage-setpower: '{prefix}&cUsage: &e/sj setpower <name> <value>'
+usage-setvertical: '{prefix}&cUsage: &e/sj setvertical <name> <value>'
+
+help:
+  - '&a&m--------------&a&l SlimeJumps &a&m--------------'
+  - '&a/sj create <name> [power] [vertical] &7— Create a pad on the block you stand on'
+  - '&a/sj remove <name> &7— Delete a pad'
+  - '&a/sj list &7— List all pads'
+  - '&a/sj info <name> &7— Show details of a pad'
+  - '&a/sj tp <name> &7— Teleport to a pad'
+  - '&a/sj setpower <name> <value> &7— Change the horizontal strength'
+  - '&a/sj setvertical <name> <value> &7— Change the vertical strength'
+  - '&a/sj reload &7— Reload configuration and pads'
+  - '&a&m--------------------------------------------'

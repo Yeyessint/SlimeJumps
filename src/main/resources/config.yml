@@ -1,0 +1,51 @@
+# SlimeJumps configuration
+# Project: https://github.com/Yeyessint/SlimeJumps
+
+# Language of the plugin messages.
+# Bundled languages: en (English), es (Spanish).
+# You can add your own by creating messages_<code>.yml in this folder.
+language: en
+
+pads:
+  # Default horizontal launch strength for newly created pads.
+  default-power: 1.6
+  # Default vertical (upwards) launch velocity for newly created pads.
+  default-vertical: 1.0
+  # Absolute maximum value accepted for power/vertical in commands.
+  max-power: 10.0
+  # Minimum time between launches per player, in milliseconds.
+  cooldown-ms: 500
+  # Cancel the fall damage caused by a pad launch.
+  prevent-fall-damage: true
+  # How long (ms) after a launch the fall damage protection lasts.
+  fall-protection-ms: 10000
+
+launch:
+  sound:
+    enabled: true
+    # Sound key played when a player is launched.
+    # Any key from https://minecraft.wiki/w/Sounds.json works.
+    name: entity.ender_dragon.flap
+    volume: 1.0
+    pitch: 1.0
+  particles:
+    enabled: true
+    # Particle burst shown when a player is launched.
+    # Names from the Bukkit Particle enum (1.21.x), e.g. CLOUD, POOF, CRIT.
+    name: CLOUD
+    count: 20
+
+ambient-particles:
+  # Idle particles displayed above every registered pad.
+  enabled: true
+  name: HAPPY_VILLAGER
+  count: 8
+  # How often the particles are spawned, in server ticks (20 = 1 second).
+  interval-ticks: 10
+
+slime-block-mode:
+  # Legacy mode: when enabled, EVERY slime block in the world acts as a
+  # jump pad, without needing to register it with /slimejumps create.
+  enabled: false
+  power: 1.6
+  vertical: 1.0

@@ -1,0 +1,42 @@
+# Mensajes de SlimeJumps — Español
+# Los códigos de color usan '&'. Los {placeholders} los reemplaza el plugin.
+
+prefix: '&7SlimeJumps &a» '
+
+no-permission: '{prefix}&cNo tienes permiso para hacer eso.'
+players-only: '{prefix}&cEste comando solo puede usarse por jugadores.'
+reloaded: '{prefix}&aConfiguración y pads recargados.'
+
+pad-created: '{prefix}&ePad &a{name}&e creado &7(potencia {power}, vertical {vertical})&e.'
+pad-exists: '{prefix}&cYa existe un pad llamado &e{name}&c (o un pad en este bloque).'
+pad-removed: '{prefix}&ePad &a{name}&e eliminado.'
+pad-not-found: '{prefix}&cNo se encontró ningún pad llamado &e{name}&c.'
+pad-updated: '{prefix}&ePad &a{name}&e actualizado: {setting} ahora es &a{value}&e.'
+pad-teleported: '{prefix}&eTeletransportado al pad &a{name}&e.'
+pad-world-unloaded: '{prefix}&cEl mundo del pad &e{name}&c no está cargado.'
+
+invalid-number: '{prefix}&c''{input}'' no es un número válido.'
+invalid-name: '{prefix}&cLos nombres solo pueden contener letras, números, ''-'' y ''_'' (máx. 32 caracteres).'
+
+list-empty: '{prefix}&eTodavía no hay jump pads. Crea uno con &a/sj create <nombre>&e.'
+list-header: '{prefix}&eJump pads (&a{count}&e):'
+list-entry: '&7 • &a{name} &7— {world} ({x}, {y}, {z}) &epotencia {power}&7, &evertical {vertical}'
+
+usage-create: '{prefix}&cUso: &e/sj create <nombre> [potencia] [vertical]'
+usage-remove: '{prefix}&cUso: &e/sj remove <nombre>'
+usage-info: '{prefix}&cUso: &e/sj info <nombre>'
+usage-tp: '{prefix}&cUso: &e/sj tp <nombre>'
+usage-setpower: '{prefix}&cUso: &e/sj setpower <nombre> <valor>'
+usage-setvertical: '{prefix}&cUso: &e/sj setvertical <nombre> <valor>'
+
+help:
+  - '&a&m--------------&a&l SlimeJumps &a&m--------------'
+  - '&a/sj create <nombre> [potencia] [vertical] &7— Crea un pad en el bloque donde estás'
+  - '&a/sj remove <nombre> &7— Elimina un pad'
+  - '&a/sj list &7— Lista todos los pads'
+  - '&a/sj info <nombre> &7— Muestra los detalles de un pad'
+  - '&a/sj tp <nombre> &7— Teletranspórtate a un pad'
+  - '&a/sj setpower <nombre> <valor> &7— Cambia la potencia horizontal'
+  - '&a/sj setvertical <nombre> <valor> &7— Cambia la potencia vertical'
+  - '&a/sj reload &7— Recarga la configuración y los pads'
+  - '&a&m--------------------------------------------'
