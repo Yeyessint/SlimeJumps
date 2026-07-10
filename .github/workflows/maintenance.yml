@@ -1,14 +1,11 @@
 name: Maintenance
 
 on:
-  push:
-    branches: [master]
   workflow_dispatch:
 
 jobs:
   cleanup-merged-branches:
     name: Delete merged branches
-    if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: write
     runs-on: ubuntu-latest
