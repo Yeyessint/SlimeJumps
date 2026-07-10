@@ -2,12 +2,15 @@ package net.licory.slimejumps;
 
 import net.licory.slimejumps.command.SlimeJumpsCommand;
 import net.licory.slimejumps.gui.PadListGui;
+import net.licory.slimejumps.integration.SlimeJumpsExpansion;
 import net.licory.slimejumps.listener.DoubleJumpListener;
 import net.licory.slimejumps.listener.JumpPadListener;
 import net.licory.slimejumps.listener.WandListener;
+import net.licory.slimejumps.manager.ChargeManager;
 import net.licory.slimejumps.manager.FlightManager;
 import net.licory.slimejumps.manager.HologramManager;
 import net.licory.slimejumps.manager.JumpPadManager;
+import net.licory.slimejumps.manager.RouteEditManager;
 import net.licory.slimejumps.manager.RouteManager;
 import net.licory.slimejumps.manager.StatsManager;
 import net.licory.slimejumps.task.ParticleTask;
@@ -42,7 +45,10 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
     private FlightManager flightManager;
     private StatsManager statsManager;
     private HologramManager hologramManager;
+    private ChargeManager chargeManager;
+    private RouteEditManager routeEditManager;
     private WandListener wandListener;
+    private JumpPadListener jumpPadListener;
     private PadListGui padListGui;
     private Messages messages;
     private BukkitTask particleTask;
@@ -77,14 +83,24 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(hologramManager, this);
         hologramManager.spawnAll();
 
+        chargeManager = new ChargeManager(this);
+        getServer().getPluginManager().registerEvents(chargeManager, this);
+        getServer().getScheduler().runTaskTimer(this, chargeManager, 2L, 2L);
+
+        routeEditManager = new RouteEditManager(this);
+        getServer().getPluginManager().registerEvents(routeEditManager, this);
+        getServer().getScheduler().runTaskTimer(this, routeEditManager, 10L, 10L);
+
         wandListener = new WandListener(this);
         getServer().getPluginManager().registerEvents(wandListener, this);
 
         registerCommand();
-        getServer().getPluginManager().registerEvents(new JumpPadListener(this), this);
+        jumpPadListener = new JumpPadListener(this);
+        getServer().getPluginManager().registerEvents(jumpPadListener, this);
         getServer().getPluginManager().registerEvents(new DoubleJumpListener(this), this);
         startParticleTask();
         startMetrics();
+        hookPlaceholderApi();
 
         if (getConfig().getBoolean("update-checker", true)) {
             UpdateChecker updateChecker = new UpdateChecker(this);
@@ -105,6 +121,9 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
         if (hologramManager != null) {
             hologramManager.removeAll();
         }
+        if (routeEditManager != null) {
+            routeEditManager.reset();
+        }
         if (padManager != null) {
             padManager.save();
         }
@@ -123,6 +142,7 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
         messages.load();
         padManager.load();
         routeManager.load();
+        routeEditManager.reset();
         hologramManager.removeAll();
         hologramManager.spawnAll();
         restartParticleTask();
@@ -165,6 +185,14 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
         }
     }
 
+    /** Registers the PlaceholderAPI expansion when PlaceholderAPI is present. */
+    private void hookPlaceholderApi() {
+        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new SlimeJumpsExpansion(this).register();
+            getLogger().info("Hooked into PlaceholderAPI.");
+        }
+    }
+
     public JumpPadManager getPadManager() {
         return padManager;
     }
@@ -191,6 +219,18 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
 
     public WandListener getWandListener() {
         return wandListener;
+    }
+
+    public ChargeManager getChargeManager() {
+        return chargeManager;
+    }
+
+    public RouteEditManager getRouteEditManager() {
+        return routeEditManager;
+    }
+
+    public JumpPadListener getJumpPadListener() {
+        return jumpPadListener;
     }
 
     public Messages getMessages() {

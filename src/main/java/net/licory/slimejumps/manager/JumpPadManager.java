@@ -91,6 +91,9 @@ public final class JumpPadManager {
             }
             pad.setMessage(section.getString("message"));
             pad.setHologram(section.getString("hologram"));
+            if (section.contains("charge")) {
+                pad.setChargeMs(section.getLong("charge", 0L));
+            }
             index(pad);
         }
     }
@@ -122,6 +125,7 @@ public final class JumpPadManager {
             }
             data.set(path + ".message", pad.getMessage());
             data.set(path + ".hologram", pad.getHologram());
+            data.set(path + ".charge", pad.getChargeMs());
         }
         try {
             data.save(file);
@@ -242,6 +246,7 @@ public final class JumpPadManager {
         }
         renamed.setMessage(pad.getMessage());
         renamed.setHologram(pad.getHologram());
+        renamed.setChargeMs(pad.getChargeMs());
 
         index(renamed);
         save();

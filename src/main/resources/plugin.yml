@@ -5,6 +5,7 @@ api-version: '1.21'
 author: Yeyessint
 description: Configurable jump pads for lobbies and hubs.
 website: https://github.com/Yeyessint/SlimeJumps
+softdepend: [PlaceholderAPI]
 
 commands:
   slimejumps:

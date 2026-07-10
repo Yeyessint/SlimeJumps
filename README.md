@@ -13,6 +13,9 @@ SlimeJumps adds configurable **jump pads** to your Minecraft server — the laun
 ## Features
 
 - ⚡ **Named jump pads** on any block, created with a single command.
+- 👁️ **Visual route editor** — `/sj route edit` shows numbered waypoints and the flight path drawn with particles; the wand adds and removes waypoints with a click. *No other jump pad plugin has this.*
+- 📐 **Trajectory preview** — `/sj preview <pad>` draws the exact launch parabola with particles, so you tune the power seeing where players will land.
+- 🔋 **Charge pads** — stand on the pad to fill a charge bar (action bar + rising pitch); at 100% it launches at full power, step off early for a partial launch.
 - ✈️ **Flight routes** — link a pad to a route and players who step on it fly along your waypoints to a destination, with a particle trail and arrival effects (perfect for sending players from the lobby to a game area).
 - 🎯 **Per-pad launch power** — horizontal and vertical strength configurable for every pad.
 - 🧭 **Fixed or free direction** — pads can launch players where they look, or always in a fixed direction.
@@ -31,6 +34,7 @@ SlimeJumps adds configurable **jump pads** to your Minecraft server — the laun
 - 🌐 **Disabled worlds** list to keep pads inert in build or creative worlds.
 - 📍 **`/sj near`** — find the pads around you while building.
 - 🔔 **Update checker** — get notified when a new release is published on GitHub (can be disabled).
+- 🧩 **PlaceholderAPI support** — `%slimejumps_total_launches%`, `%slimejumps_player_launches%`, `%slimejumps_pads%`, `%slimejumps_routes%`, `%slimejumps_top_pad%`, `%slimejumps_top_pad_uses%`.
 - ✨ **Ambient particles** above each pad so players can spot them (fully configurable).
 - 🛡️ **Fall damage protection** after launches and route landings, plus full damage immunity while flying a route.
 - ⏱️ **Anti-spam cooldown** so pads can't be abused.
@@ -64,6 +68,9 @@ The main command is `/slimejumps` (aliases: `/sj`, `/jumppads`).
 | `/sj create <name> --preset <preset>` | Create a pad from a preset (`parkour`, `cannon`, `bounce`, or your own) |
 | `/sj wand` | Get the editor wand — left click creates a pad, right click removes one |
 | `/sj sethologram <pad> <text...\|none>` | Floating hologram above the pad (`&` colors, `\|` for new lines) |
+| `/sj setcharge <pad> <ms\|off>` | Turn a pad into a charge pad (fill the bar to launch at full power) |
+| `/sj preview <pad>` | Draw the pad's launch trajectory (or its route path) with particles |
+| `/sj route edit <name>` | Visual route editor: numbered waypoints + particle path; wand clicks add/remove points |
 | `/sj remove <name>` | Delete a pad |
 | `/sj list` | List all pads with their coordinates |
 | `/sj info <name>` | Show the details of a pad |

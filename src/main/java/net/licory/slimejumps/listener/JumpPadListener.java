@@ -87,6 +87,13 @@ public final class JumpPadListener implements Listener {
             return;
         }
 
+        // Charge pads hand the player over to the charge manager, which
+        // launches through executeCharged() once the bar fills.
+        if (pad != null && pad.getChargeMs() != null) {
+            plugin.getChargeManager().beginCharge(player, pad);
+            return;
+        }
+
         long cooldownMs = pad != null && pad.getCooldownMs() != null
                 ? pad.getCooldownMs()
                 : plugin.getConfig().getLong("pads.cooldown-ms", 500L);
@@ -118,11 +125,38 @@ public final class JumpPadListener implements Listener {
     }
 
     /**
+     * Launches a player from a charge pad with the accumulated charge
+     * fraction. A fully charged route pad starts its route; partial
+     * charges always launch directionally at scaled power.
+     */
+    public void executeCharged(Player player, JumpPad pad, double fraction) {
+        long cooldownMs = pad.getCooldownMs() != null
+                ? pad.getCooldownMs()
+                : plugin.getConfig().getLong("pads.cooldown-ms", 500L);
+        if (!cooldowns.tryUse(player.getUniqueId(), cooldownMs)) {
+            return;
+        }
+
+        if (fraction >= 0.999D && pad.getRouteName() != null) {
+            Route route = plugin.getRouteManager().get(pad.getRouteName());
+            if (route != null && plugin.getFlightManager().start(player, route)) {
+                playLaunchEffects(player, pad);
+                finishUse(player, pad);
+                return;
+            }
+        }
+
+        launch(player, pad.getPower() * fraction, pad.getVertical() * fraction, pad.getFixedYaw());
+        playLaunchEffects(player, pad);
+        finishUse(player, pad);
+    }
+
+    /**
      * Records the launch and applies the pad's extras: console command,
      * potion effect and action bar message.
      */
     private void finishUse(Player player, JumpPad pad) {
-        plugin.getStatsManager().recordLaunch(pad);
+        plugin.getStatsManager().recordLaunch(player, pad);
         if (pad == null) {
             return;
         }
