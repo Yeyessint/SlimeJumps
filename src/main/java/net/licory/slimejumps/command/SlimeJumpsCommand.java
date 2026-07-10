@@ -28,13 +28,15 @@ public final class SlimeJumpsCommand implements TabExecutor {
     private static final String ADMIN_PERMISSION = "slimejumps.admin";
     private static final Pattern NAME_PATTERN = Pattern.compile("[A-Za-z0-9_-]{1,32}");
     private static final List<String> SUBCOMMANDS = Arrays.asList(
-            "create", "remove", "list", "info", "tp", "setpower", "setvertical",
+            "create", "remove", "list", "info", "tp", "near", "stats",
+            "setpower", "setvertical", "setcooldown", "setcommand",
             "setroute", "setdirection", "setsound", "setparticle", "route", "reload", "help");
     private static final List<String> ROUTE_SUBCOMMANDS = Arrays.asList(
             "create", "addpoint", "delpoint", "remove", "list", "info");
     private static final List<String> PAD_NAME_SUBCOMMANDS = Arrays.asList(
             "remove", "delete", "info", "tp", "teleport", "setpower", "setvertical",
-            "setroute", "setdirection", "setsound", "setparticle");
+            "setcooldown", "setcommand", "setroute", "setdirection", "setsound", "setparticle");
+    private static final double DEFAULT_NEAR_RADIUS = 20.0D;
 
     private final SlimeJumpsPlugin plugin;
 
@@ -64,6 +66,10 @@ public final class SlimeJumpsCommand implements TabExecutor {
             case "tp", "teleport" -> handleTeleport(sender, args);
             case "setpower" -> handleSetValue(sender, args, true);
             case "setvertical" -> handleSetValue(sender, args, false);
+            case "setcooldown" -> handleSetCooldown(sender, args);
+            case "setcommand" -> handleSetCommand(sender, args);
+            case "near" -> handleNear(sender, args);
+            case "stats" -> handleStats(sender);
             case "setroute" -> handleSetRoute(sender, args);
             case "setdirection" -> handleSetDirection(sender, args);
             case "setsound" -> handleSetSound(sender, args);
@@ -138,6 +144,7 @@ public final class SlimeJumpsCommand implements TabExecutor {
             return;
         }
         if (plugin.getPadManager().delete(args[1])) {
+            plugin.getStatsManager().clearPad(args[1]);
             messages.send(sender, "pad-removed", "name", args[1]);
         } else {
             messages.send(sender, "pad-not-found", "name", args[1]);
@@ -173,7 +180,9 @@ public final class SlimeJumpsCommand implements TabExecutor {
                 "route", pad.getRouteName() != null ? pad.getRouteName() : "-",
                 "direction", pad.getFixedYaw() != null ? "fixed (" + format(pad.getFixedYaw()) + "°)" : "look",
                 "sound", pad.getSound() != null ? pad.getSound() : "default",
-                "particle", pad.getParticle() != null ? pad.getParticle() : "default");
+                "particle", pad.getParticle() != null ? pad.getParticle() : "default",
+                "cooldown", pad.getCooldownMs() != null ? pad.getCooldownMs() + "ms" : "default",
+                "command", pad.getCommand() != null ? pad.getCommand() : "-");
     }
 
     private void sendPadLine(CommandSender sender, JumpPad pad) {
@@ -239,6 +248,132 @@ public final class SlimeJumpsCommand implements TabExecutor {
                 "name", pad.getName(),
                 "setting", isPower ? "power" : "vertical",
                 "value", format(value));
+    }
+
+    private void handleSetCooldown(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 3) {
+            messages.send(sender, "usage-setcooldown");
+            return;
+        }
+        JumpPad pad = plugin.getPadManager().get(args[1]);
+        if (pad == null) {
+            messages.send(sender, "pad-not-found", "name", args[1]);
+            return;
+        }
+        if (args[2].equalsIgnoreCase("default")) {
+            pad.setCooldownMs(null);
+            plugin.getPadManager().save();
+            messages.send(sender, "pad-updated",
+                    "name", pad.getName(), "setting", "cooldown", "value", "default");
+            return;
+        }
+        long cooldown;
+        try {
+            cooldown = Math.max(0L, Long.parseLong(args[2]));
+        } catch (NumberFormatException e) {
+            messages.send(sender, "invalid-number", "input", args[2]);
+            return;
+        }
+        pad.setCooldownMs(cooldown);
+        plugin.getPadManager().save();
+        messages.send(sender, "pad-updated",
+                "name", pad.getName(), "setting", "cooldown", "value", cooldown + "ms");
+    }
+
+    private void handleSetCommand(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 3) {
+            messages.send(sender, "usage-setcommand");
+            return;
+        }
+        JumpPad pad = plugin.getPadManager().get(args[1]);
+        if (pad == null) {
+            messages.send(sender, "pad-not-found", "name", args[1]);
+            return;
+        }
+        if (args.length == 3 && args[2].equalsIgnoreCase("none")) {
+            pad.setCommand(null);
+            plugin.getPadManager().save();
+            messages.send(sender, "pad-command-cleared", "name", pad.getName());
+            return;
+        }
+        String command = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+        if (command.startsWith("/")) {
+            command = command.substring(1);
+        }
+        pad.setCommand(command);
+        plugin.getPadManager().save();
+        messages.send(sender, "pad-command-set", "name", pad.getName(), "command", command);
+    }
+
+    private void handleNear(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (!(sender instanceof Player player)) {
+            messages.send(sender, "players-only");
+            return;
+        }
+        double radius = DEFAULT_NEAR_RADIUS;
+        if (args.length >= 2) {
+            try {
+                radius = Math.max(1.0D, Double.parseDouble(args[1]));
+            } catch (NumberFormatException e) {
+                messages.send(sender, "invalid-number", "input", args[1]);
+                return;
+            }
+        }
+
+        record NearPad(JumpPad pad, double distance) {}
+        Location origin = player.getLocation();
+        List<NearPad> nearby = new ArrayList<>();
+        for (JumpPad pad : plugin.getPadManager().getAll()) {
+            if (!pad.getWorldName().equals(origin.getWorld().getName())) {
+                continue;
+            }
+            double dx = pad.getX() + 0.5D - origin.getX();
+            double dy = pad.getY() + 0.5D - origin.getY();
+            double dz = pad.getZ() + 0.5D - origin.getZ();
+            double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (distance <= radius) {
+                nearby.add(new NearPad(pad, distance));
+            }
+        }
+
+        if (nearby.isEmpty()) {
+            messages.send(sender, "near-empty", "radius", format(radius));
+            return;
+        }
+        nearby.sort(java.util.Comparator.comparingDouble(NearPad::distance));
+        messages.send(sender, "near-header",
+                "count", String.valueOf(nearby.size()), "radius", format(radius));
+        for (NearPad entry : nearby) {
+            messages.send(sender, "near-entry",
+                    "name", entry.pad().getName(),
+                    "distance", format(entry.distance()),
+                    "x", String.valueOf(entry.pad().getX()),
+                    "y", String.valueOf(entry.pad().getY()),
+                    "z", String.valueOf(entry.pad().getZ()));
+        }
+    }
+
+    private void handleStats(CommandSender sender) {
+        Messages messages = plugin.getMessages();
+        var stats = plugin.getStatsManager();
+        messages.send(sender, "stats-header");
+        messages.send(sender, "stats-total",
+                "total", String.valueOf(stats.getTotalLaunches()));
+        var top = stats.getTopPads(10);
+        if (top.isEmpty()) {
+            messages.send(sender, "stats-empty");
+            return;
+        }
+        int rank = 1;
+        for (var entry : top) {
+            messages.send(sender, "stats-entry",
+                    "rank", String.valueOf(rank++),
+                    "name", entry.getKey(),
+                    "uses", String.valueOf(entry.getValue()));
+        }
     }
 
     private void handleSetRoute(CommandSender sender, String[] args) {
@@ -559,6 +694,12 @@ public final class SlimeJumpsCommand implements TabExecutor {
                 }
                 case "setdirection" -> {
                     return filter(Arrays.asList("look", "here"), args[2]);
+                }
+                case "setcooldown" -> {
+                    return filter(List.of("default"), args[2]);
+                }
+                case "setcommand" -> {
+                    return filter(List.of("none"), args[2]);
                 }
                 case "setparticle" -> {
                     List<String> options = new ArrayList<>();

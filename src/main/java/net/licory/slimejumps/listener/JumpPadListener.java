@@ -76,7 +76,9 @@ public final class JumpPadListener implements Listener {
             return;
         }
 
-        long cooldownMs = plugin.getConfig().getLong("pads.cooldown-ms", 500L);
+        long cooldownMs = pad != null && pad.getCooldownMs() != null
+                ? pad.getCooldownMs()
+                : plugin.getConfig().getLong("pads.cooldown-ms", 500L);
         if (!cooldowns.tryUse(player.getUniqueId(), cooldownMs)) {
             return;
         }
@@ -86,6 +88,7 @@ public final class JumpPadListener implements Listener {
             Route route = plugin.getRouteManager().get(pad.getRouteName());
             if (route != null && plugin.getFlightManager().start(player, route)) {
                 playLaunchEffects(player, pad);
+                finishUse(player, pad);
                 return;
             }
             // Route missing or empty: fall back to a directional launch.
@@ -100,6 +103,17 @@ public final class JumpPadListener implements Listener {
                     null);
         }
         playLaunchEffects(player, pad);
+        finishUse(player, pad);
+    }
+
+    /** Records the launch and runs the pad's console command, if any. */
+    private void finishUse(Player player, JumpPad pad) {
+        plugin.getStatsManager().recordLaunch(pad);
+
+        if (pad != null && pad.getCommand() != null && !pad.getCommand().isBlank()) {
+            String command = pad.getCommand().replace("%player%", player.getName());
+            plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), command);
+        }
     }
 
     @EventHandler(ignoreCancelled = true)

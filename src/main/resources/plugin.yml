@@ -19,3 +19,6 @@ permissions:
   slimejumps.use:
     description: Allows being launched by jump pads.
     default: true
+  slimejumps.doublejump:
+    description: Allows double jumping when the feature is enabled.
+    default: true

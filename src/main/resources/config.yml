@@ -6,6 +6,13 @@
 # You can add your own by creating messages_<code>.yml in this folder.
 language: en
 
+# Check GitHub for new releases on startup and notify admins on join.
+update-checker: true
+
+stats:
+  # Count how many times each pad is used (see /sj stats).
+  enabled: true
+
 pads:
   # Default horizontal launch strength for newly created pads.
   default-power: 1.6
@@ -71,6 +78,25 @@ routes:
       enabled: true
       name: FIREWORK
       count: 30
+
+double-jump:
+  # Lobby-style double jump: pressing the jump key in mid-air boosts
+  # players (permission: slimejumps.doublejump). Disabled in creative
+  # and spectator mode, and compatible with /fly from other plugins.
+  enabled: false
+  power: 0.9
+  vertical: 0.9
+  cooldown-ms: 500
+  prevent-fall-damage: true
+  sound:
+    enabled: true
+    name: entity.bat.takeoff
+    volume: 1.0
+    pitch: 1.0
+  particles:
+    enabled: true
+    name: CLOUD
+    count: 15
 
 slime-block-mode:
   # Legacy mode: when enabled, EVERY slime block in the world acts as a

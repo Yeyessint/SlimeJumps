@@ -78,6 +78,10 @@ public final class JumpPadManager {
             }
             pad.setSound(section.getString("sound"));
             pad.setParticle(section.getString("particle"));
+            pad.setCommand(section.getString("command"));
+            if (section.contains("cooldown")) {
+                pad.setCooldownMs(section.getLong("cooldown", 0L));
+            }
             index(pad);
         }
     }
@@ -97,6 +101,8 @@ public final class JumpPadManager {
             data.set(path + ".yaw", pad.getFixedYaw() == null ? null : pad.getFixedYaw().doubleValue());
             data.set(path + ".sound", pad.getSound());
             data.set(path + ".particle", pad.getParticle());
+            data.set(path + ".command", pad.getCommand());
+            data.set(path + ".cooldown", pad.getCooldownMs());
         }
         try {
             data.save(file);

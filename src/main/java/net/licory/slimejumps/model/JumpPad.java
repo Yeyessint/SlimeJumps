@@ -24,6 +24,8 @@ public final class JumpPad {
     private Float fixedYaw;
     private String sound;
     private String particle;
+    private String command;
+    private Long cooldownMs;
 
     public JumpPad(String name, String worldName, int x, int y, int z, double power, double vertical) {
         this.name = name;
@@ -113,6 +115,28 @@ public final class JumpPad {
 
     public void setParticle(String particle) {
         this.particle = particle;
+    }
+
+    /**
+     * Console command executed when a player uses this pad
+     * ({@code %player%} is replaced by the player's name), or
+     * {@code null} for no command.
+     */
+    public String getCommand() {
+        return command;
+    }
+
+    public void setCommand(String command) {
+        this.command = command;
+    }
+
+    /** Per-pad cooldown in milliseconds, or {@code null} to use the global default. */
+    public Long getCooldownMs() {
+        return cooldownMs;
+    }
+
+    public void setCooldownMs(Long cooldownMs) {
+        this.cooldownMs = cooldownMs;
     }
 
     /**
