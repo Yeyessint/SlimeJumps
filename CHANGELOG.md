@@ -2,6 +2,15 @@
 
 All notable changes to SlimeJumps are documented in this file.
 
+## [2.5.0] - 2026-07-10
+
+### Added
+- **Visual route editor**: `/sj route edit <name>` shows every waypoint as a numbered floating marker and draws the flight path with particles (visible only to the editor). While editing, the wand's left click appends a waypoint at your position and right click removes the nearest one.
+- **Trajectory preview**: `/sj preview <pad>` simulates the vanilla launch physics and draws the exact parabola with particles for a few seconds, highlighting the landing spot. Route pads preview their flight path instead.
+- **Charge pads**: `/sj setcharge <pad> <ms|off>` — standing on the pad fills an action-bar charge bar with a rising sound pitch; at 100% it launches at full power, stepping off earlier launches with the accumulated fraction.
+- **PlaceholderAPI support** (soft dependency): `%slimejumps_total_launches%`, `%slimejumps_player_launches%`, `%slimejumps_pads%`, `%slimejumps_routes%`, `%slimejumps_top_pad%` and `%slimejumps_top_pad_uses%`.
+- Per-player launch counters in `stats.yml` powering the new placeholders.
+
 ## [2.4.0] - 2026-07-10
 
 ### Added

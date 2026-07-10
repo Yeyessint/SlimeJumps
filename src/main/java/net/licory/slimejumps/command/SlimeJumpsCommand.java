@@ -3,7 +3,9 @@ package net.licory.slimejumps.command;
 import net.licory.slimejumps.SlimeJumpsPlugin;
 import net.licory.slimejumps.model.JumpPad;
 import net.licory.slimejumps.model.Route;
+import net.licory.slimejumps.task.PreviewTask;
 import net.licory.slimejumps.util.Messages;
+import net.licory.slimejumps.util.TrajectorySimulator;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.command.Command;
@@ -31,15 +33,16 @@ public final class SlimeJumpsCommand implements TabExecutor {
     private static final Pattern NAME_PATTERN = Pattern.compile("[A-Za-z0-9_-]{1,32}");
     private static final List<String> SUBCOMMANDS = Arrays.asList(
             "create", "remove", "list", "info", "tp", "gui", "near", "stats", "wand",
-            "toggle", "rename", "setpower", "setvertical", "setcooldown", "setcommand",
-            "seteffect", "setmessage", "sethologram", "setroute", "setdirection",
-            "setsound", "setparticle", "route", "reload", "help");
+            "preview", "toggle", "rename", "setpower", "setvertical", "setcooldown",
+            "setcommand", "seteffect", "setmessage", "sethologram", "setcharge",
+            "setroute", "setdirection", "setsound", "setparticle", "route", "reload", "help");
     private static final List<String> ROUTE_SUBCOMMANDS = Arrays.asList(
-            "create", "addpoint", "delpoint", "remove", "list", "info");
+            "create", "addpoint", "delpoint", "edit", "remove", "list", "info");
     private static final List<String> PAD_NAME_SUBCOMMANDS = Arrays.asList(
-            "remove", "delete", "info", "tp", "teleport", "toggle", "rename",
+            "remove", "delete", "info", "tp", "teleport", "preview", "toggle", "rename",
             "setpower", "setvertical", "setcooldown", "setcommand", "seteffect",
-            "setmessage", "sethologram", "setroute", "setdirection", "setsound", "setparticle");
+            "setmessage", "sethologram", "setcharge", "setroute", "setdirection",
+            "setsound", "setparticle");
     private static final List<String> COMMON_EFFECTS = Arrays.asList(
             "none", "SPEED", "JUMP_BOOST", "SLOW_FALLING", "LEVITATION",
             "GLOWING", "REGENERATION", "RESISTANCE", "INVISIBILITY");
@@ -83,6 +86,8 @@ public final class SlimeJumpsCommand implements TabExecutor {
             case "seteffect" -> handleSetEffect(sender, args);
             case "setmessage" -> handleSetMessage(sender, args);
             case "sethologram" -> handleSetHologram(sender, args);
+            case "setcharge" -> handleSetCharge(sender, args);
+            case "preview" -> handlePreview(sender, args);
             case "wand" -> handleWand(sender);
             case "setroute" -> handleSetRoute(sender, args);
             case "setdirection" -> handleSetDirection(sender, args);
@@ -247,6 +252,7 @@ public final class SlimeJumpsCommand implements TabExecutor {
                 "cooldown", pad.getCooldownMs() != null ? pad.getCooldownMs() + "ms" : "default",
                 "command", pad.getCommand() != null ? pad.getCommand() : "-",
                 "status", pad.isEnabled() ? "enabled" : "disabled",
+                "charge", pad.getChargeMs() != null ? pad.getChargeMs() + "ms" : "-",
                 "effect", pad.getEffect() != null
                         ? pad.getEffect() + " " + (pad.getEffectAmplifier() + 1)
                                 + " (" + pad.getEffectDuration() + "s)"
@@ -471,6 +477,73 @@ public final class SlimeJumpsCommand implements TabExecutor {
         plugin.getPadManager().save();
         plugin.getHologramManager().refresh(pad);
         messages.send(sender, "pad-hologram-set", "name", pad.getName(), "text", text);
+    }
+
+    private void handleSetCharge(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 3) {
+            messages.send(sender, "usage-setcharge");
+            return;
+        }
+        JumpPad pad = plugin.getPadManager().get(args[1]);
+        if (pad == null) {
+            messages.send(sender, "pad-not-found", "name", args[1]);
+            return;
+        }
+        if (args[2].equalsIgnoreCase("off")) {
+            pad.setChargeMs(null);
+            plugin.getPadManager().save();
+            messages.send(sender, "pad-charge-cleared", "name", pad.getName());
+            return;
+        }
+        long chargeMs;
+        try {
+            chargeMs = Math.max(200L, Long.parseLong(args[2]));
+        } catch (NumberFormatException e) {
+            messages.send(sender, "invalid-number", "input", args[2]);
+            return;
+        }
+        pad.setChargeMs(chargeMs);
+        plugin.getPadManager().save();
+        messages.send(sender, "pad-charge-set", "name", pad.getName(), "ms", String.valueOf(chargeMs));
+    }
+
+    private void handlePreview(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (!(sender instanceof Player player)) {
+            messages.send(sender, "players-only");
+            return;
+        }
+        if (args.length < 2) {
+            messages.send(sender, "usage-preview");
+            return;
+        }
+        JumpPad pad = plugin.getPadManager().get(args[1]);
+        if (pad == null) {
+            messages.send(sender, "pad-not-found", "name", args[1]);
+            return;
+        }
+        Location padLocation = pad.toLocation();
+        if (padLocation == null) {
+            messages.send(sender, "pad-world-unloaded", "name", pad.getName());
+            return;
+        }
+
+        List<Location> points;
+        Route route = pad.getRouteName() != null
+                ? plugin.getRouteManager().get(pad.getRouteName())
+                : null;
+        if (route != null && !route.resolveWaypoints().isEmpty()) {
+            // Route pads: preview the flight path itself.
+            points = TrajectorySimulator.interpolate(route.resolveWaypoints(), 1.0D);
+        } else {
+            Location start = padLocation.add(0.5D, 1.1D, 0.5D);
+            float yaw = pad.getFixedYaw() != null ? pad.getFixedYaw() : player.getLocation().getYaw();
+            points = TrajectorySimulator.simulate(start, yaw, pad.getPower(), pad.getVertical());
+        }
+
+        PreviewTask.start(plugin, player, points);
+        messages.send(sender, "preview-started", "name", pad.getName());
     }
 
     private void handleWand(CommandSender sender) {
@@ -741,11 +814,30 @@ public final class SlimeJumpsCommand implements TabExecutor {
             case "create" -> handleRouteCreate(sender, args);
             case "addpoint" -> handleRouteAddPoint(sender, args);
             case "delpoint" -> handleRouteDelPoint(sender, args);
+            case "edit" -> handleRouteEdit(sender, args);
             case "remove", "delete" -> handleRouteRemove(sender, args);
             case "list" -> handleRouteList(sender);
             case "info" -> handleRouteInfo(sender, args);
             default -> messages.send(sender, "usage-route");
         }
+    }
+
+    private void handleRouteEdit(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (!(sender instanceof Player player)) {
+            messages.send(sender, "players-only");
+            return;
+        }
+        if (args.length < 3) {
+            messages.send(sender, "usage-route-edit");
+            return;
+        }
+        Route route = plugin.getRouteManager().get(args[2]);
+        if (route == null) {
+            messages.send(sender, "route-not-found", "name", args[2]);
+            return;
+        }
+        plugin.getRouteEditManager().toggle(player, route);
     }
 
     private void handleRouteCreate(CommandSender sender, String[] args) {
@@ -831,6 +923,7 @@ public final class SlimeJumpsCommand implements TabExecutor {
             return;
         }
         if (plugin.getRouteManager().delete(args[2])) {
+            plugin.getRouteEditManager().onRouteRemoved(args[2]);
             messages.send(sender, "route-removed", "name", args[2]);
         } else {
             messages.send(sender, "route-not-found", "name", args[2]);
@@ -931,6 +1024,9 @@ public final class SlimeJumpsCommand implements TabExecutor {
                 case "setcooldown" -> {
                     return filter(List.of("default"), args[2]);
                 }
+                case "setcharge" -> {
+                    return filter(Arrays.asList("off", "1000", "2000", "3000"), args[2]);
+                }
                 case "setcommand", "setmessage", "sethologram" -> {
                     return filter(List.of("none"), args[2]);
                 }
@@ -956,8 +1052,8 @@ public final class SlimeJumpsCommand implements TabExecutor {
                 case "route" -> {
                     String routeSub = args[1].toLowerCase(Locale.ROOT);
                     if (routeSub.equals("addpoint") || routeSub.equals("delpoint")
-                            || routeSub.equals("remove") || routeSub.equals("delete")
-                            || routeSub.equals("info")) {
+                            || routeSub.equals("edit") || routeSub.equals("remove")
+                            || routeSub.equals("delete") || routeSub.equals("info")) {
                         return filter(routeNames(), args[2]);
                     }
                 }

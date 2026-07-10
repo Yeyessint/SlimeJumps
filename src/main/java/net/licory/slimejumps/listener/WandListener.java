@@ -70,6 +70,16 @@ public final class WandListener implements Listener {
         if (!player.hasPermission(ADMIN_PERMISSION)) {
             return;
         }
+
+        // In route edit mode the wand edits waypoints instead of pads.
+        if (plugin.getRouteEditManager().isEditing(player)) {
+            event.setCancelled(true);
+            boolean leftClick = event.getAction() == Action.LEFT_CLICK_BLOCK
+                    || event.getAction() == Action.LEFT_CLICK_AIR;
+            plugin.getRouteEditManager().handleWandClick(player, leftClick);
+            return;
+        }
+
         Block block = event.getClickedBlock();
         if (block == null) {
             return;

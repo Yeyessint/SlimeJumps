@@ -32,6 +32,7 @@ public final class JumpPad {
     private int effectAmplifier;
     private String message;
     private String hologram;
+    private Long chargeMs;
 
     public JumpPad(String name, String worldName, int x, int y, int z, double power, double vertical) {
         this.name = name;
@@ -203,6 +204,19 @@ public final class JumpPad {
 
     public void setHologram(String hologram) {
         this.hologram = hologram;
+    }
+
+    /**
+     * Charge time in milliseconds for charge pads (standing on the pad
+     * fills a charge bar before launching), or {@code null} for an
+     * instant pad.
+     */
+    public Long getChargeMs() {
+        return chargeMs;
+    }
+
+    public void setChargeMs(Long chargeMs) {
+        this.chargeMs = chargeMs;
     }
 
     /**

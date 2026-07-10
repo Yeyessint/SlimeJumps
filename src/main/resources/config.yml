@@ -66,6 +66,25 @@ holograms:
   # /sj sethologram; use | to separate lines).
   height: 1.6
 
+preview:
+  # How long /sj preview keeps drawing the trajectory, in seconds.
+  duration-seconds: 6
+  particle: HAPPY_VILLAGER
+
+charge:
+  # Charge pads (/sj setcharge <pad> <ms>): standing on the pad fills a
+  # charge bar; at 100% the pad launches at full power. Stepping off
+  # earlier launches with the accumulated fraction, if it is at least:
+  min-launch-fraction: 0.2
+  sound:
+    # Tick sound with rising pitch while charging.
+    enabled: true
+    name: block.note_block.pling
+
+route-editor:
+  # Particle used to draw the path lines in /sj route edit mode.
+  line-particle: END_ROD
+
 routes:
   # Flight speed along routes, in blocks per tick (20 ticks = 1 second).
   speed: 1.2

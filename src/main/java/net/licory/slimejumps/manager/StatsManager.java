@@ -4,6 +4,7 @@ import net.licory.slimejumps.SlimeJumpsPlugin;
 import net.licory.slimejumps.model.JumpPad;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Tracks launch statistics: how many times each pad has been used and
@@ -25,6 +27,7 @@ public final class StatsManager {
 
     private final SlimeJumpsPlugin plugin;
     private final Map<String, Long> padUses = new HashMap<>();
+    private final Map<UUID, Long> playerUses = new HashMap<>();
     private final File file;
     private long totalLaunches;
     private boolean dirty;
@@ -37,6 +40,7 @@ public final class StatsManager {
     /** Loads counters from {@code stats.yml}. */
     public void load() {
         padUses.clear();
+        playerUses.clear();
         totalLaunches = 0L;
         dirty = false;
 
@@ -51,6 +55,16 @@ public final class StatsManager {
                 padUses.put(name, pads.getLong(name, 0L));
             }
         }
+        ConfigurationSection players = data.getConfigurationSection("players");
+        if (players != null) {
+            for (String id : players.getKeys(false)) {
+                try {
+                    playerUses.put(UUID.fromString(id), players.getLong(id, 0L));
+                } catch (IllegalArgumentException ignored) {
+                    // Skip malformed entries.
+                }
+            }
+        }
     }
 
     /** Writes counters to {@code stats.yml} if anything changed. */
@@ -63,6 +77,9 @@ public final class StatsManager {
         for (Map.Entry<String, Long> entry : padUses.entrySet()) {
             data.set("pads." + entry.getKey(), entry.getValue());
         }
+        for (Map.Entry<UUID, Long> entry : playerUses.entrySet()) {
+            data.set("players." + entry.getKey(), entry.getValue());
+        }
         try {
             data.save(file);
             dirty = false;
@@ -73,17 +90,23 @@ public final class StatsManager {
 
     /**
      * Records one launch. Slime-block-mode launches pass a {@code null}
-     * pad and only increase the server total.
+     * pad and only increase the server and player totals.
      */
-    public void recordLaunch(JumpPad pad) {
+    public void recordLaunch(Player player, JumpPad pad) {
         if (!plugin.getConfig().getBoolean("stats.enabled", true)) {
             return;
         }
         totalLaunches++;
+        playerUses.merge(player.getUniqueId(), 1L, Long::sum);
         if (pad != null) {
             padUses.merge(pad.getName(), 1L, Long::sum);
         }
         dirty = true;
+    }
+
+    /** Launches recorded for one player (used by placeholders). */
+    public long getPlayerLaunches(UUID playerId) {
+        return playerUses.getOrDefault(playerId, 0L);
     }
 
     /** Forgets the counter of a deleted pad. */

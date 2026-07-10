@@ -13,6 +13,9 @@ SlimeJumps añade **jump pads** configurables a tu servidor de Minecraft: las pl
 ## Características
 
 - ⚡ **Jump pads con nombre** sobre cualquier bloque, creados con un solo comando.
+- 👁️ **Editor visual de rutas** — `/sj route edit` muestra los puntos numerados y la trayectoria dibujada con partículas; la varita añade y quita puntos con un clic. *Ningún otro plugin de jump pads lo tiene.*
+- 📐 **Vista previa de trayectoria** — `/sj preview <pad>` dibuja la parábola exacta del lanzamiento con partículas, para ajustar la potencia viendo dónde caerán los jugadores.
+- 🔋 **Pads de carga** — quédate sobre el pad para llenar una barra de carga (actionbar + tono ascendente); al 100% lanza a plena potencia, si te bajas antes lanza proporcionalmente.
 - ✈️ **Rutas de vuelo** — vincula un pad a una ruta y los jugadores que lo pisen saldrán volando por tus waypoints hasta un destino, con estela de partículas y efectos de llegada (perfecto para llevar jugadores del lobby a una zona de juego).
 - 🎯 **Potencia por pad** — fuerza horizontal y vertical configurable para cada pad.
 - 🧭 **Dirección fija o libre** — los pads pueden lanzar hacia donde mira el jugador, o siempre en una dirección fija.
@@ -31,6 +34,7 @@ SlimeJumps añade **jump pads** configurables a tu servidor de Minecraft: las pl
 - 🌐 **Lista de mundos deshabilitados** para que los pads no funcionen en mundos creativos o de construcción.
 - 📍 **`/sj near`** — encuentra los pads a tu alrededor mientras construyes.
 - 🔔 **Aviso de actualizaciones** — notifica cuando se publica una nueva versión en GitHub (desactivable).
+- 🧩 **Soporte PlaceholderAPI** — `%slimejumps_total_launches%`, `%slimejumps_player_launches%`, `%slimejumps_pads%`, `%slimejumps_routes%`, `%slimejumps_top_pad%`, `%slimejumps_top_pad_uses%`.
 - ✨ **Partículas ambientales** sobre cada pad para que los jugadores los vean (totalmente configurables).
 - 🛡️ **Protección contra daño de caída** tras lanzamientos y aterrizajes de ruta, e inmunidad total mientras se vuela una ruta.
 - ⏱️ **Cooldown anti-spam** para que los pads no se puedan abusar.
@@ -64,6 +68,9 @@ El comando principal es `/slimejumps` (alias: `/sj`, `/jumppads`).
 | `/sj create <nombre> --preset <preset>` | Crea un pad desde un preset (`parkour`, `cannon`, `bounce`, o los tuyos) |
 | `/sj wand` | Consigue la varita de edición — clic izquierdo crea, clic derecho elimina |
 | `/sj sethologram <pad> <texto...\|none>` | Holograma flotante sobre el pad (colores `&`, `\|` para saltos de línea) |
+| `/sj setcharge <pad> <ms\|off>` | Convierte un pad en pad de carga (llena la barra para lanzar a tope) |
+| `/sj preview <pad>` | Dibuja la trayectoria de lanzamiento (o la ruta) con partículas |
+| `/sj route edit <nombre>` | Editor visual de rutas: puntos numerados + trayectoria de partículas; la varita añade/quita puntos |
 | `/sj remove <nombre>` | Elimina un pad |
 | `/sj list` | Lista todos los pads con sus coordenadas |
 | `/sj info <nombre>` | Muestra los detalles de un pad |
