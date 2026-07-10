@@ -9,6 +9,7 @@ import org.bukkit.Particle;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 
@@ -29,16 +30,16 @@ public final class SlimeJumpsCommand implements TabExecutor {
     private static final String ADMIN_PERMISSION = "slimejumps.admin";
     private static final Pattern NAME_PATTERN = Pattern.compile("[A-Za-z0-9_-]{1,32}");
     private static final List<String> SUBCOMMANDS = Arrays.asList(
-            "create", "remove", "list", "info", "tp", "gui", "near", "stats",
+            "create", "remove", "list", "info", "tp", "gui", "near", "stats", "wand",
             "toggle", "rename", "setpower", "setvertical", "setcooldown", "setcommand",
-            "seteffect", "setmessage", "setroute", "setdirection", "setsound", "setparticle",
-            "route", "reload", "help");
+            "seteffect", "setmessage", "sethologram", "setroute", "setdirection",
+            "setsound", "setparticle", "route", "reload", "help");
     private static final List<String> ROUTE_SUBCOMMANDS = Arrays.asList(
             "create", "addpoint", "delpoint", "remove", "list", "info");
     private static final List<String> PAD_NAME_SUBCOMMANDS = Arrays.asList(
             "remove", "delete", "info", "tp", "teleport", "toggle", "rename",
             "setpower", "setvertical", "setcooldown", "setcommand", "seteffect",
-            "setmessage", "setroute", "setdirection", "setsound", "setparticle");
+            "setmessage", "sethologram", "setroute", "setdirection", "setsound", "setparticle");
     private static final List<String> COMMON_EFFECTS = Arrays.asList(
             "none", "SPEED", "JUMP_BOOST", "SLOW_FALLING", "LEVITATION",
             "GLOWING", "REGENERATION", "RESISTANCE", "INVISIBILITY");
@@ -81,6 +82,8 @@ public final class SlimeJumpsCommand implements TabExecutor {
             case "rename" -> handleRename(sender, args);
             case "seteffect" -> handleSetEffect(sender, args);
             case "setmessage" -> handleSetMessage(sender, args);
+            case "sethologram" -> handleSetHologram(sender, args);
+            case "wand" -> handleWand(sender);
             case "setroute" -> handleSetRoute(sender, args);
             case "setdirection" -> handleSetDirection(sender, args);
             case "setsound" -> handleSetSound(sender, args);
@@ -118,20 +121,38 @@ public final class SlimeJumpsCommand implements TabExecutor {
 
         double power = plugin.getConfig().getDouble("pads.default-power", 1.6D);
         double vertical = plugin.getConfig().getDouble("pads.default-vertical", 1.0D);
-        if (args.length >= 3) {
-            try {
-                power = clampPower(Double.parseDouble(args[2]));
-            } catch (NumberFormatException e) {
-                messages.send(sender, "invalid-number", "input", args[2]);
+        ConfigurationSection preset = null;
+
+        if (args.length >= 3 && args[2].equalsIgnoreCase("--preset")) {
+            if (args.length < 4) {
+                messages.send(sender, "usage-create");
                 return;
             }
-        }
-        if (args.length >= 4) {
-            try {
-                vertical = clampPower(Double.parseDouble(args[3]));
-            } catch (NumberFormatException e) {
-                messages.send(sender, "invalid-number", "input", args[3]);
+            preset = plugin.getConfig()
+                    .getConfigurationSection("presets." + args[3].toLowerCase(Locale.ROOT));
+            if (preset == null) {
+                messages.send(sender, "invalid-preset",
+                        "input", args[3], "presets", presetNames());
                 return;
+            }
+            power = clampPower(preset.getDouble("power", power));
+            vertical = clampPower(preset.getDouble("vertical", vertical));
+        } else {
+            if (args.length >= 3) {
+                try {
+                    power = clampPower(Double.parseDouble(args[2]));
+                } catch (NumberFormatException e) {
+                    messages.send(sender, "invalid-number", "input", args[2]);
+                    return;
+                }
+            }
+            if (args.length >= 4) {
+                try {
+                    vertical = clampPower(Double.parseDouble(args[3]));
+                } catch (NumberFormatException e) {
+                    messages.send(sender, "invalid-number", "input", args[3]);
+                    return;
+                }
             }
         }
 
@@ -142,10 +163,40 @@ public final class SlimeJumpsCommand implements TabExecutor {
             messages.send(sender, "pad-exists", "name", name);
             return;
         }
+        if (preset != null) {
+            applyPreset(pad, preset);
+        }
         messages.send(sender, "pad-created",
                 "name", pad.getName(),
                 "power", format(pad.getPower()),
                 "vertical", format(pad.getVertical()));
+    }
+
+    /** Copies the optional extras of a preset section onto a new pad. */
+    private void applyPreset(JumpPad pad, ConfigurationSection preset) {
+        if (preset.contains("sound")) {
+            pad.setSound(preset.getString("sound"));
+        }
+        if (preset.contains("particle")) {
+            pad.setParticle(preset.getString("particle"));
+        }
+        if (preset.contains("cooldown-ms")) {
+            pad.setCooldownMs(preset.getLong("cooldown-ms", 0L));
+        }
+        if (preset.contains("message")) {
+            pad.setMessage(preset.getString("message"));
+        }
+        if (preset.contains("effect")) {
+            pad.setEffect(preset.getString("effect"),
+                    preset.getInt("effect-duration", 5),
+                    preset.getInt("effect-amplifier", 0));
+        }
+        plugin.getPadManager().save();
+    }
+
+    private String presetNames() {
+        ConfigurationSection presets = plugin.getConfig().getConfigurationSection("presets");
+        return presets == null ? "-" : String.join(", ", presets.getKeys(false));
     }
 
     private void handleRemove(CommandSender sender, String[] args) {
@@ -156,6 +207,7 @@ public final class SlimeJumpsCommand implements TabExecutor {
         }
         if (plugin.getPadManager().delete(args[1])) {
             plugin.getStatsManager().clearPad(args[1]);
+            plugin.getHologramManager().remove(args[1]);
             messages.send(sender, "pad-removed", "name", args[1]);
         } else {
             messages.send(sender, "pad-not-found", "name", args[1]);
@@ -316,6 +368,8 @@ public final class SlimeJumpsCommand implements TabExecutor {
             return;
         }
         plugin.getStatsManager().renamePad(oldName, renamed.getName());
+        plugin.getHologramManager().remove(oldName);
+        plugin.getHologramManager().trySpawn(renamed);
         messages.send(sender, "pad-renamed", "old", oldName, "name", renamed.getName());
     }
 
@@ -392,6 +446,41 @@ public final class SlimeJumpsCommand implements TabExecutor {
         pad.setMessage(text);
         plugin.getPadManager().save();
         messages.send(sender, "pad-message-set", "name", pad.getName(), "message", text);
+    }
+
+    private void handleSetHologram(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 3) {
+            messages.send(sender, "usage-sethologram");
+            return;
+        }
+        JumpPad pad = plugin.getPadManager().get(args[1]);
+        if (pad == null) {
+            messages.send(sender, "pad-not-found", "name", args[1]);
+            return;
+        }
+        if (args.length == 3 && args[2].equalsIgnoreCase("none")) {
+            pad.setHologram(null);
+            plugin.getPadManager().save();
+            plugin.getHologramManager().remove(pad.getName());
+            messages.send(sender, "pad-hologram-cleared", "name", pad.getName());
+            return;
+        }
+        String text = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+        pad.setHologram(text);
+        plugin.getPadManager().save();
+        plugin.getHologramManager().refresh(pad);
+        messages.send(sender, "pad-hologram-set", "name", pad.getName(), "text", text);
+    }
+
+    private void handleWand(CommandSender sender) {
+        Messages messages = plugin.getMessages();
+        if (!(sender instanceof Player player)) {
+            messages.send(sender, "players-only");
+            return;
+        }
+        player.getInventory().addItem(plugin.getWandListener().createWand());
+        messages.send(sender, "wand-given");
     }
 
     private void handleSetCooldown(CommandSender sender, String[] args) {
@@ -842,11 +931,14 @@ public final class SlimeJumpsCommand implements TabExecutor {
                 case "setcooldown" -> {
                     return filter(List.of("default"), args[2]);
                 }
-                case "setcommand", "setmessage" -> {
+                case "setcommand", "setmessage", "sethologram" -> {
                     return filter(List.of("none"), args[2]);
                 }
                 case "seteffect" -> {
                     return filter(COMMON_EFFECTS, args[2]);
+                }
+                case "create" -> {
+                    return filter(List.of("--preset"), args[2]);
                 }
                 case "setparticle" -> {
                     List<String> options = new ArrayList<>();
@@ -872,6 +964,12 @@ public final class SlimeJumpsCommand implements TabExecutor {
                 default -> {
                     return List.of();
                 }
+            }
+        }
+        if (args.length == 4 && sub.equals("create") && args[2].equalsIgnoreCase("--preset")) {
+            ConfigurationSection presets = plugin.getConfig().getConfigurationSection("presets");
+            if (presets != null) {
+                return filter(new ArrayList<>(presets.getKeys(false)), args[3]);
             }
         }
         return List.of();

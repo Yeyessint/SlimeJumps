@@ -2,6 +2,15 @@
 
 All notable changes to SlimeJumps are documented in this file.
 
+## [2.4.0] - 2026-07-10
+
+### Added
+- **Holograms**: `/sj sethologram <pad> <text|none>` shows floating text above a pad using native 1.21 text displays — no external hologram plugin required. Supports `&` colors and `|` for multiple lines; height configurable via `holograms.height`.
+- **Editor wand**: `/sj wand` gives a tagged stick — left click a block to create a pad (auto-named), right click a pad block to remove it.
+- **Pad presets**: `/sj create <name> --preset <preset>` with bundled `parkour`, `cannon` and `bounce` presets; define your own (power, vertical, sound, particle, cooldown, message, effect) in the `presets` config section.
+- **Flight whoosh**: a continuous, configurable wind sound while flying routes (`routes.flight-sound`).
+- **bStats metrics** scaffolding with a `metrics` config toggle (activates once a bStats service id is registered).
+
 ## [2.3.0] - 2026-07-10
 
 ### Added

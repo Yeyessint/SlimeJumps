@@ -13,6 +13,9 @@ stats:
   # Count how many times each pad is used (see /sj stats).
   enabled: true
 
+# Anonymous bStats usage metrics (requires a registered service id).
+metrics: true
+
 # Worlds where jump pads, slime block mode and routes are disabled.
 disabled-worlds: []
 #  - creative_world
@@ -58,6 +61,11 @@ ambient-particles:
   # How often the particles are spawned, in server ticks (20 = 1 second).
   interval-ticks: 10
 
+holograms:
+  # Height of hologram texts above the pad block (set per pad with
+  # /sj sethologram; use | to separate lines).
+  height: 1.6
+
 routes:
   # Flight speed along routes, in blocks per tick (20 ticks = 1 second).
   speed: 1.2
@@ -72,6 +80,13 @@ routes:
     enabled: true
     name: END_ROD
     count: 3
+  flight-sound:
+    # Whoosh played repeatedly while flying a route.
+    enabled: true
+    name: entity.phantom.flap
+    volume: 0.7
+    pitch: 1.0
+    interval-ticks: 8
   arrival:
     # Effects played when a player reaches the end of a route.
     sound:
@@ -83,6 +98,28 @@ routes:
       enabled: true
       name: FIREWORK
       count: 30
+
+# Presets usable with /sj create <name> --preset <preset>.
+# Each preset may set: power, vertical, sound, particle, cooldown-ms,
+# message, effect, effect-duration and effect-amplifier.
+# Add as many of your own as you like.
+presets:
+  parkour:
+    power: 1.2
+    vertical: 0.8
+    sound: entity.rabbit.jump
+    particle: CRIT
+    cooldown-ms: 0
+  cannon:
+    power: 4.0
+    vertical: 1.6
+    sound: entity.generic.explode
+    particle: EXPLOSION
+  bounce:
+    power: 0.0
+    vertical: 1.4
+    sound: block.slime_block.hit
+    particle: ITEM_SLIME
 
 double-jump:
   # Lobby-style double jump: pressing the jump key in mid-air boosts

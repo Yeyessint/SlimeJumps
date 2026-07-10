@@ -19,6 +19,10 @@ SlimeJumps añade **jump pads** configurables a tu servidor de Minecraft: las pl
 - ⌨️ **Comandos de consola por pad** — ejecuta cualquier comando al usar un pad (placeholder `%player%`), p. ej. enviar jugadores a otro servidor o dar recompensas.
 - 📊 **Estadísticas de lanzamientos** — `/sj stats` muestra el total de lanzamientos y los pads más usados.
 - 🖱️ **GUI de pads** — `/sj gui` abre un menú paginado con todos los pads; haz clic en uno para teletransportarte.
+- 🏷️ **Hologramas** — texto flotante sobre cualquier pad (`/sj sethologram`), sin necesidad de plugins de hologramas externos.
+- 🪄 **Varita de edición** — `/sj wand` te da un palo: clic izquierdo en un bloque crea un pad, clic derecho en un pad lo elimina.
+- 🎛️ **Presets de pads** — `/sj create <nombre> --preset parkour|cannon|bounce` (define los tuyos en la config).
+- 🌬️ **Whoosh de vuelo** — sonido de viento continuo mientras vuelas por las rutas.
 - 🧪 **Efectos de poción por pad** — aplica velocidad, caída lenta, levitación… al usar un pad.
 - 💬 **Mensajes en la actionbar por pad**, con códigos de color y placeholder `%player%`.
 - 🔀 **Activa/desactiva y renombra pads** sin tener que recrearlos.
@@ -55,6 +59,9 @@ El comando principal es `/slimejumps` (alias: `/sj`, `/jumppads`).
 | Comando | Descripción |
 |---|---|
 | `/sj create <nombre> [potencia] [vertical]` | Crea un pad en el bloque donde estás |
+| `/sj create <nombre> --preset <preset>` | Crea un pad desde un preset (`parkour`, `cannon`, `bounce`, o los tuyos) |
+| `/sj wand` | Consigue la varita de edición — clic izquierdo crea, clic derecho elimina |
+| `/sj sethologram <pad> <texto...\|none>` | Holograma flotante sobre el pad (colores `&`, `\|` para saltos de línea) |
 | `/sj remove <nombre>` | Elimina un pad |
 | `/sj list` | Lista todos los pads con sus coordenadas |
 | `/sj info <nombre>` | Muestra los detalles de un pad |
@@ -111,6 +118,15 @@ stats:
   enabled: true         # Contabiliza el uso de pads para /sj stats
 
 disabled-worlds: []     # Mundos donde los pads y rutas no funcionan
+metrics: true           # Métricas anónimas de uso (bStats)
+
+holograms:
+  height: 1.6           # Altura de los hologramas sobre los pads
+
+presets:                # Para /sj create <nombre> --preset <preset>
+  parkour: {power: 1.2, vertical: 0.8, sound: entity.rabbit.jump, particle: CRIT, cooldown-ms: 0}
+  cannon: {power: 4.0, vertical: 1.6, sound: entity.generic.explode, particle: EXPLOSION}
+  bounce: {power: 0.0, vertical: 1.4, sound: block.slime_block.hit, particle: ITEM_SLIME}
 
 pads:
   default-power: 1.6    # Fuerza horizontal por defecto de los pads nuevos
@@ -147,6 +163,12 @@ routes:
     enabled: true
     name: END_ROD
     count: 3
+  flight-sound:         # Whoosh mientras vuelas
+    enabled: true
+    name: entity.phantom.flap
+    volume: 0.7
+    pitch: 1.0
+    interval-ticks: 8
   arrival:
     sound:
       enabled: true

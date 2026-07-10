@@ -90,6 +90,7 @@ public final class JumpPadManager {
                         section.getInt("effect-amplifier", 0));
             }
             pad.setMessage(section.getString("message"));
+            pad.setHologram(section.getString("hologram"));
             index(pad);
         }
     }
@@ -120,6 +121,7 @@ public final class JumpPadManager {
                 data.set(path + ".effect-amplifier", pad.getEffectAmplifier());
             }
             data.set(path + ".message", pad.getMessage());
+            data.set(path + ".hologram", pad.getHologram());
         }
         try {
             data.save(file);
@@ -239,10 +241,27 @@ public final class JumpPadManager {
             renamed.setEffect(pad.getEffect(), pad.getEffectDuration(), pad.getEffectAmplifier());
         }
         renamed.setMessage(pad.getMessage());
+        renamed.setHologram(pad.getHologram());
 
         index(renamed);
         save();
         return renamed;
+    }
+
+    /**
+     * Creates a pad with an auto-generated name ({@code pad1}, {@code pad2}, …)
+     * and default power values. Used by the wand.
+     *
+     * @return the created pad, or {@code null} if the block already has one
+     */
+    public JumpPad createAuto(Location location) {
+        int i = padsByName.size() + 1;
+        while (padsByName.containsKey("pad" + i)) {
+            i++;
+        }
+        return create("pad" + i, location,
+                plugin.getConfig().getDouble("pads.default-power", 1.6D),
+                plugin.getConfig().getDouble("pads.default-vertical", 1.0D));
     }
 
     /** Looks up a pad by name (case-insensitive). */

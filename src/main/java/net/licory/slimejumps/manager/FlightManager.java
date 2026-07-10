@@ -32,6 +32,7 @@ public final class FlightManager implements Listener, Runnable {
     private static final class Flight {
         final List<Location> waypoints;
         int index;
+        int ticks;
         final long startedAt = System.currentTimeMillis();
 
         Flight(List<Location> waypoints) {
@@ -122,7 +123,24 @@ public final class FlightManager implements Listener, Runnable {
             player.setVelocity(new Vector(dx * factor, dy * factor, dz * factor));
             player.setFallDistance(0.0F);
             spawnTrail(player);
+            playFlightSound(player, flight);
         }
+    }
+
+    /** Plays the periodic whoosh while a player flies a route. */
+    private void playFlightSound(Player player, Flight flight) {
+        if (!plugin.getConfig().getBoolean("routes.flight-sound.enabled", true)) {
+            return;
+        }
+        int interval = Math.max(1, plugin.getConfig().getInt("routes.flight-sound.interval-ticks", 8));
+        if (flight.ticks++ % interval != 0) {
+            return;
+        }
+        String sound = plugin.getConfig().getString("routes.flight-sound.name", "entity.phantom.flap");
+        float volume = (float) plugin.getConfig().getDouble("routes.flight-sound.volume", 0.7D);
+        float pitch = (float) plugin.getConfig().getDouble("routes.flight-sound.pitch", 1.0D);
+        Location location = player.getLocation();
+        location.getWorld().playSound(location, sound, volume, pitch);
     }
 
     /** Moves the flight to its next waypoint; returns {@code false} when finished. */

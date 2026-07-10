@@ -31,6 +31,7 @@ public final class JumpPad {
     private int effectDuration;
     private int effectAmplifier;
     private String message;
+    private String hologram;
 
     public JumpPad(String name, String worldName, int x, int y, int z, double power, double vertical) {
         this.name = name;
@@ -190,6 +191,18 @@ public final class JumpPad {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    /**
+     * Hologram text floating above the pad ({@code |} separates lines),
+     * or {@code null} for no hologram.
+     */
+    public String getHologram() {
+        return hologram;
+    }
+
+    public void setHologram(String hologram) {
+        this.hologram = hologram;
     }
 
     /**

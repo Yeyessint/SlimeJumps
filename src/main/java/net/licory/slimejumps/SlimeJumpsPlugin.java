@@ -4,13 +4,16 @@ import net.licory.slimejumps.command.SlimeJumpsCommand;
 import net.licory.slimejumps.gui.PadListGui;
 import net.licory.slimejumps.listener.DoubleJumpListener;
 import net.licory.slimejumps.listener.JumpPadListener;
+import net.licory.slimejumps.listener.WandListener;
 import net.licory.slimejumps.manager.FlightManager;
+import net.licory.slimejumps.manager.HologramManager;
 import net.licory.slimejumps.manager.JumpPadManager;
 import net.licory.slimejumps.manager.RouteManager;
 import net.licory.slimejumps.manager.StatsManager;
 import net.licory.slimejumps.task.ParticleTask;
 import net.licory.slimejumps.util.Messages;
 import net.licory.slimejumps.util.UpdateChecker;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -27,10 +30,19 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
     /** How often launch statistics are flushed to disk (5 minutes). */
     private static final long STATS_SAVE_INTERVAL_TICKS = 6000L;
 
+    /**
+     * bStats service id. Register the plugin at
+     * https://bstats.org/register to obtain a real id and set it here;
+     * metrics are skipped while it is 0.
+     */
+    private static final int BSTATS_SERVICE_ID = 0;
+
     private JumpPadManager padManager;
     private RouteManager routeManager;
     private FlightManager flightManager;
     private StatsManager statsManager;
+    private HologramManager hologramManager;
+    private WandListener wandListener;
     private PadListGui padListGui;
     private Messages messages;
     private BukkitTask particleTask;
@@ -61,10 +73,18 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
         padListGui = new PadListGui(this);
         getServer().getPluginManager().registerEvents(padListGui, this);
 
+        hologramManager = new HologramManager(this);
+        getServer().getPluginManager().registerEvents(hologramManager, this);
+        hologramManager.spawnAll();
+
+        wandListener = new WandListener(this);
+        getServer().getPluginManager().registerEvents(wandListener, this);
+
         registerCommand();
         getServer().getPluginManager().registerEvents(new JumpPadListener(this), this);
         getServer().getPluginManager().registerEvents(new DoubleJumpListener(this), this);
         startParticleTask();
+        startMetrics();
 
         if (getConfig().getBoolean("update-checker", true)) {
             UpdateChecker updateChecker = new UpdateChecker(this);
@@ -81,6 +101,9 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
         if (particleTask != null) {
             particleTask.cancel();
             particleTask = null;
+        }
+        if (hologramManager != null) {
+            hologramManager.removeAll();
         }
         if (padManager != null) {
             padManager.save();
@@ -100,6 +123,8 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
         messages.load();
         padManager.load();
         routeManager.load();
+        hologramManager.removeAll();
+        hologramManager.spawnAll();
         restartParticleTask();
     }
 
@@ -130,6 +155,16 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
         startParticleTask();
     }
 
+    /**
+     * Starts anonymous bStats usage metrics, if enabled in the config
+     * and a bStats service id has been configured.
+     */
+    private void startMetrics() {
+        if (BSTATS_SERVICE_ID > 0 && getConfig().getBoolean("metrics", true)) {
+            new Metrics(this, BSTATS_SERVICE_ID);
+        }
+    }
+
     public JumpPadManager getPadManager() {
         return padManager;
     }
@@ -148,6 +183,14 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
 
     public PadListGui getPadListGui() {
         return padListGui;
+    }
+
+    public HologramManager getHologramManager() {
+        return hologramManager;
+    }
+
+    public WandListener getWandListener() {
+        return wandListener;
     }
 
     public Messages getMessages() {

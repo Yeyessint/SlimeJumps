@@ -19,6 +19,10 @@ SlimeJumps adds configurable **jump pads** to your Minecraft server — the laun
 - ⌨️ **Per-pad console commands** — run any command when a pad is used (`%player%` placeholder), e.g. send players to another server or give rewards.
 - 📊 **Launch statistics** — `/sj stats` shows total launches and the most used pads.
 - 🖱️ **Pads GUI** — `/sj gui` opens a paginated menu of all pads; click one to teleport to it.
+- 🏷️ **Holograms** — floating text above any pad (`/sj sethologram`), no external hologram plugin needed.
+- 🪄 **Editor wand** — `/sj wand` gives a stick: left click a block to create a pad, right click a pad to remove it.
+- 🎛️ **Pad presets** — `/sj create <name> --preset parkour|cannon|bounce` (define your own in the config).
+- 🌬️ **Flight whoosh** — a continuous wind sound while flying routes.
 - 🧪 **Potion effects per pad** — apply speed, slow falling, levitation… when a pad is used.
 - 💬 **Action bar messages per pad**, with color codes and `%player%` placeholder.
 - 🔀 **Toggle and rename pads** without recreating them.
@@ -55,6 +59,9 @@ The main command is `/slimejumps` (aliases: `/sj`, `/jumppads`).
 | Command | Description |
 |---|---|
 | `/sj create <name> [power] [vertical]` | Create a pad on the block you are standing on |
+| `/sj create <name> --preset <preset>` | Create a pad from a preset (`parkour`, `cannon`, `bounce`, or your own) |
+| `/sj wand` | Get the editor wand — left click creates a pad, right click removes one |
+| `/sj sethologram <pad> <text...\|none>` | Floating hologram above the pad (`&` colors, `\|` for new lines) |
 | `/sj remove <name>` | Delete a pad |
 | `/sj list` | List all pads with their coordinates |
 | `/sj info <name>` | Show the details of a pad |
@@ -111,6 +118,15 @@ stats:
   enabled: true         # Track pad usage for /sj stats
 
 disabled-worlds: []     # Worlds where pads and routes are inert
+metrics: true           # Anonymous bStats usage metrics
+
+holograms:
+  height: 1.6           # Height of hologram texts above pads
+
+presets:                # Used by /sj create <name> --preset <preset>
+  parkour: {power: 1.2, vertical: 0.8, sound: entity.rabbit.jump, particle: CRIT, cooldown-ms: 0}
+  cannon: {power: 4.0, vertical: 1.6, sound: entity.generic.explode, particle: EXPLOSION}
+  bounce: {power: 0.0, vertical: 1.4, sound: block.slime_block.hit, particle: ITEM_SLIME}
 
 pads:
   default-power: 1.6    # Default horizontal strength for new pads
@@ -147,6 +163,12 @@ routes:
     enabled: true
     name: END_ROD
     count: 3
+  flight-sound:         # Whoosh played while flying
+    enabled: true
+    name: entity.phantom.flap
+    volume: 0.7
+    pitch: 1.0
+    interval-ticks: 8
   arrival:
     sound:
       enabled: true
