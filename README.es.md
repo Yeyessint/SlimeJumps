@@ -11,15 +11,20 @@ SlimeJumps añade **jump pads** configurables a tu servidor de Minecraft: las pl
 ## Características
 
 - ⚡ **Jump pads con nombre** sobre cualquier bloque, creados con un solo comando.
+- ✈️ **Rutas de vuelo** — vincula un pad a una ruta y los jugadores que lo pisen saldrán volando por tus waypoints hasta un destino, con estela de partículas y efectos de llegada (perfecto para llevar jugadores del lobby a una zona de juego).
 - 🎯 **Potencia por pad** — fuerza horizontal y vertical configurable para cada pad.
+- 🧭 **Dirección fija o libre** — los pads pueden lanzar hacia donde mira el jugador, o siempre en una dirección fija.
+- 🎨 **Sonido y partícula por pad**, además de los valores globales por defecto.
 - ✨ **Partículas ambientales** sobre cada pad para que los jugadores los vean (totalmente configurables).
-- 🔊 **Sonido y explosión de partículas al lanzar**, ambos configurables.
-- 🛡️ **Protección contra daño de caída** tras ser lanzado.
+- 🛡️ **Protección contra daño de caída** tras lanzamientos y aterrizajes de ruta, e inmunidad total mientras se vuela una ruta.
 - ⏱️ **Cooldown anti-spam** para que los pads no se puedan abusar.
+- 🤫 **Bypass agachado** (opcional): los jugadores agachados pasan sobre los pads sin ser lanzados — ideal para el staff mientras construye.
 - 🟩 **Modo bloque de slime** (opcional): haz que *todos* los bloques de slime del mundo actúen como pad, como en la versión 1.x clásica.
 - 🌍 **Mensajes multi-idioma** — inglés y español incluidos; puedes añadir tu propio idioma.
 - 🔁 **Migración automática** de los pads creados con SlimeJumps 1.x.
-- 🧭 **Autocompletado (tab)** en todos los comandos.
+- ⌨️ **Autocompletado (tab)** en todos los comandos.
+
+Si SlimeJumps te resulta útil, ¡considera darle una ⭐ al repositorio — ayuda mucho al proyecto!
 
 ## Requisitos
 
@@ -46,8 +51,26 @@ El comando principal es `/slimejumps` (alias: `/sj`, `/jumppads`).
 | `/sj tp <nombre>` | Teletranspórtate a un pad |
 | `/sj setpower <nombre> <valor>` | Cambia la fuerza horizontal de un pad |
 | `/sj setvertical <nombre> <valor>` | Cambia la fuerza vertical de un pad |
-| `/sj reload` | Recarga configuración, mensajes y pads |
+| `/sj setroute <pad> <ruta\|none>` | Haz que un pad lleve volando por una ruta (o vuelva a ser un pad normal) |
+| `/sj setdirection <pad> <look\|here>` | Lanzar hacia donde mira el jugador, o siempre hacia donde tú miras |
+| `/sj setsound <pad> <sonido\|default>` | Sonido de lanzamiento por pad |
+| `/sj setparticle <pad> <partícula\|default>` | Partícula de lanzamiento por pad |
+| `/sj route create <nombre>` | Crea una ruta de vuelo con su primer punto en tu posición |
+| `/sj route addpoint <nombre>` | Añade tu posición actual a una ruta |
+| `/sj route delpoint <nombre> <número>` | Elimina un punto de una ruta |
+| `/sj route remove <nombre>` | Elimina una ruta (los pads que la usaban vuelven a ser normales) |
+| `/sj route list` | Lista todas las rutas |
+| `/sj route info <nombre>` | Muestra los puntos de una ruta |
+| `/sj reload` | Recarga configuración, mensajes, pads y rutas |
 | `/sj help` | Muestra la ayuda |
+
+### Cómo montar una ruta de vuelo
+
+1. Crea la ruta donde debe empezar el vuelo: `/sj route create ajuegos`
+2. Vuela por el camino que quieres que sigan los jugadores y ejecuta `/sj route addpoint ajuegos` en cada giro. El último punto que añadas es el lugar de aterrizaje.
+3. Vincula un pad: `/sj setroute mipad ajuegos`
+
+Los jugadores que pisen `mipad` volarán por tus waypoints, dejando una estela de partículas, y aterrizarán sanos y salvos en el destino.
 
 ## Permisos
 
@@ -70,6 +93,7 @@ pads:
   cooldown-ms: 500      # Cooldown anti-spam por jugador
   prevent-fall-damage: true
   fall-protection-ms: 10000
+  ignore-sneaking: false # Los jugadores agachados no son lanzados
 
 launch:
   sound:
@@ -88,13 +112,33 @@ ambient-particles:
   count: 8
   interval-ticks: 10
 
+routes:
+  speed: 1.2            # Velocidad de vuelo en bloques por tick
+  timeout-seconds: 30
+  protect-during-flight: true
+  landing-protection-ms: 5000
+  trail:
+    enabled: true
+    name: END_ROD
+    count: 3
+  arrival:
+    sound:
+      enabled: true
+      name: entity.player.levelup
+      volume: 1.0
+      pitch: 1.2
+    particles:
+      enabled: true
+      name: FIREWORK
+      count: 30
+
 slime-block-mode:
   enabled: false        # Todos los bloques de slime se convierten en pads (modo clásico)
   power: 1.6
   vertical: 1.0
 ```
 
-Los pads registrados se guardan en `plugins/SlimeJumps/pads.yml`.
+Los pads registrados se guardan en `plugins/SlimeJumps/pads.yml` y las rutas en `plugins/SlimeJumps/routes.yml`.
 
 ## Compilar desde el código fuente
 

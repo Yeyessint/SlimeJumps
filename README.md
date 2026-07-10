@@ -11,15 +11,20 @@ SlimeJumps adds configurable **jump pads** to your Minecraft server — the laun
 ## Features
 
 - ⚡ **Named jump pads** on any block, created with a single command.
+- ✈️ **Flight routes** — link a pad to a route and players who step on it fly along your waypoints to a destination, with a particle trail and arrival effects (perfect for sending players from the lobby to a game area).
 - 🎯 **Per-pad launch power** — horizontal and vertical strength configurable for every pad.
+- 🧭 **Fixed or free direction** — pads can launch players where they look, or always in a fixed direction.
+- 🎨 **Per-pad sound and particle** overrides, on top of the global defaults.
 - ✨ **Ambient particles** above each pad so players can spot them (fully configurable).
-- 🔊 **Launch sound and particle burst**, both configurable.
-- 🛡️ **Fall damage protection** after being launched.
+- 🛡️ **Fall damage protection** after launches and route landings, plus full damage immunity while flying a route.
 - ⏱️ **Anti-spam cooldown** so pads can't be abused.
+- 🤫 **Sneak to bypass** (optional): sneaking players walk over pads without being launched — great for staff while building.
 - 🟩 **Slime block mode** (optional): make *every* slime block in the world act as a pad, like the classic 1.x behaviour.
 - 🌍 **Multi-language messages** — English and Spanish included; add your own language file.
 - 🔁 **Automatic migration** of pads created with SlimeJumps 1.x.
-- 🧭 **Tab completion** for every command.
+- ⌨️ **Tab completion** for every command.
+
+If you find SlimeJumps useful, please consider giving the repository a ⭐ — it really helps the project!
 
 ## Requirements
 
@@ -46,8 +51,26 @@ The main command is `/slimejumps` (aliases: `/sj`, `/jumppads`).
 | `/sj tp <name>` | Teleport to a pad |
 | `/sj setpower <name> <value>` | Change a pad's horizontal strength |
 | `/sj setvertical <name> <value>` | Change a pad's vertical strength |
-| `/sj reload` | Reload configuration, messages and pads |
+| `/sj setroute <pad> <route\|none>` | Make a pad fly players along a route (or turn it back into a normal pad) |
+| `/sj setdirection <pad> <look\|here>` | Launch players where they look, or always towards where you are facing |
+| `/sj setsound <pad> <sound\|default>` | Per-pad launch sound |
+| `/sj setparticle <pad> <particle\|default>` | Per-pad launch particle |
+| `/sj route create <name>` | Create a flight route with its first waypoint at your position |
+| `/sj route addpoint <name>` | Append your current position to a route |
+| `/sj route delpoint <name> <number>` | Remove a waypoint from a route |
+| `/sj route remove <name>` | Delete a route (pads using it become normal pads) |
+| `/sj route list` | List all routes |
+| `/sj route info <name>` | Show a route's waypoints |
+| `/sj reload` | Reload configuration, messages, pads and routes |
 | `/sj help` | Show the help screen |
+
+### Setting up a flight route
+
+1. Create the route where the flight should start: `/sj route create togames`
+2. Fly along the path you want players to follow and run `/sj route addpoint togames` at each turn. The last point you add is the landing spot.
+3. Link a pad to it: `/sj setroute mypad togames`
+
+Players stepping on `mypad` now fly through your waypoints, leaving a particle trail, and land safely at the destination.
 
 ## Permissions
 
@@ -70,6 +93,7 @@ pads:
   cooldown-ms: 500      # Anti-spam cooldown per player
   prevent-fall-damage: true
   fall-protection-ms: 10000
+  ignore-sneaking: false # Sneaking players are not launched
 
 launch:
   sound:
@@ -88,13 +112,33 @@ ambient-particles:
   count: 8
   interval-ticks: 10
 
+routes:
+  speed: 1.2            # Flight speed in blocks per tick
+  timeout-seconds: 30
+  protect-during-flight: true
+  landing-protection-ms: 5000
+  trail:
+    enabled: true
+    name: END_ROD
+    count: 3
+  arrival:
+    sound:
+      enabled: true
+      name: entity.player.levelup
+      volume: 1.0
+      pitch: 1.2
+    particles:
+      enabled: true
+      name: FIREWORK
+      count: 30
+
 slime-block-mode:
   enabled: false        # Every slime block becomes a pad (legacy mode)
   power: 1.6
   vertical: 1.0
 ```
 
-Registered pads are stored in `plugins/SlimeJumps/pads.yml`.
+Registered pads are stored in `plugins/SlimeJumps/pads.yml` and routes in `plugins/SlimeJumps/routes.yml`.
 
 ## Building from source
 
