@@ -1,14 +1,14 @@
 =========================================================
- SLIMEJUMPS — KIT DE PUBLICACIÓN PARA SPIGOTMC
+ SLIMEJUMPS — KIT DE PUBLICACIÓN PARA SPIGOTMC (v2.5.0)
 =========================================================
 
 --- DATOS DEL RECURSO (formulario de SpigotMC) ---
 
 Título:
-SlimeJumps ⭐ Jump Pads, Flight Routes, Holograms & Double Jump [1.21.x]
+SlimeJumps ⭐ Jump Pads with Visual Route Editor, Trajectory Preview & Charge Pads [1.21.x]
 
 Tagline (descripción corta):
-Configurable jump pads with flight routes, holograms, GUI, presets, stats & double jump for lobbies
+The only jump pad plugin with a visual route editor, trajectory preview, charge pads, holograms, GUI & PlaceholderAPI
 
 Categoría: Mechanics (o Fun)
 Tested Minecraft Versions: 1.21
@@ -20,19 +20,26 @@ Idiomas: English, Spanish
 [CENTER][IMG]https://raw.githubusercontent.com/Yeyessint/SlimeJumps/master/assets/banner.png[/IMG]
 
 [SIZE=6][B][COLOR=#5edb6a]The all-in-one jump pad plugin for lobbies and hubs[/COLOR][/B][/SIZE]
-[SIZE=4][COLOR=#a0b8a6]Launch pads, waypoint flight routes, double jump, holograms, GUI and much more — lightweight, no dependencies.[/COLOR][/SIZE][/CENTER]
+[SIZE=4][COLOR=#a0b8a6]Launch pads, waypoint flight routes, visual editor, charge pads, double jump, holograms and much more — lightweight, no dependencies.[/COLOR][/SIZE][/CENTER]
+
+[SIZE=5][B][COLOR=#e5b53a]✦ What makes SlimeJumps unique[/COLOR][/B][/SIZE]
+[LIST]
+[*][B]Visual Route Editor[/B] [COLOR=#e5b53a][B](NEW)[/B][/COLOR] — edit flight routes in-game: waypoints appear as numbered floating markers and the whole path is drawn with particles. The wand adds a waypoint where you stand (left click) and removes the nearest one (right click). No other jump pad plugin has this!
+[*][B]Trajectory Preview[/B] [COLOR=#e5b53a][B](NEW)[/B][/COLOR] — [ICODE]/sj preview <pad>[/ICODE] simulates real Minecraft physics and draws the exact launch parabola with particles, highlighting the landing spot. Tune your pads seeing where players will land.
+[*][B]Charge Pads[/B] [COLOR=#e5b53a][B](NEW)[/B][/COLOR] — stand on the pad to fill a charge bar in your action bar (with a rising sound pitch). At 100% you're launched at full power; step off early for a partial launch.
+[/LIST]
 
 [SIZE=5][B][COLOR=#48b463]✦ Features[/COLOR][/B][/SIZE]
 [LIST]
 [*][B]Jump Pads[/B] — named pads on any block, each with its own horizontal & vertical launch power.
-[*][B]Flight Routes[/B] — step on a pad and fly along waypoints to any destination, with a particle trail, whoosh sound, full damage immunity in flight and arrival effects. Perfect for sending players from the lobby to game areas!
+[*][B]Flight Routes[/B] — step on a pad and fly along waypoints to any destination, with a particle trail, whoosh sound, full damage immunity in flight and arrival effects.
 [*][B]Double Jump[/B] — lobby-style mid-air boost on the jump key, compatible with /fly from other plugins.
 [*][B]Holograms[/B] — floating text above pads using native 1.21 text displays. No hologram plugin needed.
-[*][B]Editor Wand[/B] — left click a block to create a pad, right click to remove it. No commands needed.
-[*][B]Pads GUI[/B] — paginated menu of every pad; click one to teleport straight to it.
+[*][B]Editor Wand & GUI[/B] — create/remove pads with a click, or browse them all in a paginated menu with teleport.
 [*][B]Presets[/B] — create pads with one command: parkour, cannon, bounce — or define your own in the config.
-[*][B]Per-pad everything[/B] — power, direction (free or fixed), sound, particle, cooldown, potion effect, action bar message and console command (rewards, server transfers…).
-[*][B]Statistics[/B] — server-wide launch totals and your most used pads.
+[*][B]Per-pad everything[/B] — power, direction (free or fixed), sound, particle, cooldown, charge, potion effect, action bar message and console command (rewards, server transfers…).
+[*][B]PlaceholderAPI[/B] [COLOR=#e5b53a][B](NEW)[/B][/COLOR] — placeholders for scoreboards, tab and holograms (see below).
+[*][B]Statistics[/B] — server-wide and per-player launch totals, and your most used pads.
 [*][B]Safe by default[/B] — anti-spam cooldowns, fall damage protection, per-world disabling, sneak-to-bypass for staff.
 [*][B]Bilingual[/B] — English & Spanish included; add any language by dropping in one file.
 [*][B]Legacy friendly[/B] — pads from SlimeJumps 1.x are migrated automatically; optional classic "every slime block launches" mode.
@@ -44,7 +51,8 @@ Idiomas: English, Spanish
 [LIST=1]
 [*]Drop [B]SlimeJumps-x.x.x.jar[/B] into your [ICODE]plugins/[/ICODE] folder and restart.
 [*]Stand on a block and run [ICODE]/sj create spawn[/ICODE] — that block is now a jump pad!
-[*]Want a flight route? [ICODE]/sj route create togames[/ICODE], fly the path adding points with [ICODE]/sj route addpoint togames[/ICODE], then link it: [ICODE]/sj setroute spawn togames[/ICODE].
+[*]Want a flight route? [ICODE]/sj route create togames[/ICODE], then [ICODE]/sj route edit togames[/ICODE] and add the waypoints visually with the wand ([ICODE]/sj wand[/ICODE]). Link it with [ICODE]/sj setroute spawn togames[/ICODE].
+[*]Check the result with [ICODE]/sj preview spawn[/ICODE].
 [/LIST]
 
 [SIZE=5][B][COLOR=#48b463]✦ Commands[/COLOR][/B][/SIZE]
@@ -53,6 +61,7 @@ Main command: [ICODE]/slimejumps[/ICODE] (aliases [ICODE]/sj[/ICODE], [ICODE]/ju
 /sj create <name> [power] [vertical]   Create a pad where you stand
 /sj create <name> --preset <preset>    Create a pad from a preset
 /sj wand                               Editor wand (left click = create, right click = remove)
+/sj preview <pad>                      Draw the launch trajectory with particles
 /sj remove | rename | toggle <pad>     Manage pads
 /sj list | info | tp | near | gui      Find & inspect pads
 /sj stats                              Launch statistics
@@ -60,13 +69,24 @@ Main command: [ICODE]/slimejumps[/ICODE] (aliases [ICODE]/sj[/ICODE], [ICODE]/ju
 /sj setdirection <pad> <look|here>     Free or fixed launch direction
 /sj setsound | setparticle <pad> ...   Per-pad effects
 /sj setcooldown <pad> <ms|default>     Per-pad cooldown
+/sj setcharge <pad> <ms|off>           Turn a pad into a charge pad
 /sj seteffect <pad> <effect> [s] [lvl] Potion effect on use
 /sj setmessage <pad> <text|none>       Action bar message on use
 /sj sethologram <pad> <text|none>      Floating hologram above the pad
 /sj setcommand <pad> <command|none>    Console command on use (%player%)
 /sj setroute <pad> <route|none>        Link a pad to a flight route
-/sj route create|addpoint|delpoint|remove|list|info
+/sj route create|edit|addpoint|delpoint|remove|list|info
 /sj reload                             Reload everything
+[/CODE]
+
+[SIZE=5][B][COLOR=#48b463]✦ PlaceholderAPI[/COLOR][/B][/SIZE]
+[CODE]
+%slimejumps_total_launches%    Server-wide launch count
+%slimejumps_player_launches%   The player's launch count
+%slimejumps_pads%              Number of registered pads
+%slimejumps_routes%            Number of registered routes
+%slimejumps_top_pad%           Name of the most used pad
+%slimejumps_top_pad_uses%      Its launch count
 [/CODE]
 
 [SIZE=5][B][COLOR=#48b463]✦ Permissions[/COLOR][/B][/SIZE]
@@ -80,7 +100,7 @@ slimejumps.doublejump   Double jump, when enabled (default: everyone)
 [LIST]
 [*]Spigot or Paper [B]1.21.x[/B]
 [*]Java 21
-[*]No dependencies!
+[*]No hard dependencies! (PlaceholderAPI optional)
 [/LIST]
 
 [SIZE=5][B][COLOR=#48b463]✦ Links[/COLOR][/B][/SIZE]
@@ -91,19 +111,14 @@ slimejumps.doublejump   Double jump, when enabled (default: everyone)
 [/LIST]
 
 [SIZE=5][B][COLOR=#48b463]✦ En Español[/COLOR][/B][/SIZE]
-SlimeJumps es el plugin de jump pads todo-en-uno para lobbies: plataformas de salto con nombre y potencia propia, [B]rutas de vuelo[/B] por waypoints con estela de partículas, [B]doble salto[/B], [B]hologramas[/B] nativos, GUI con menú de pads, varita de edición, presets, efectos de poción, mensajes, comandos por pad, estadísticas y protección contra daño de caída. Mensajes en [B]español e inglés[/B] incluidos ([ICODE]language: es[/ICODE] en la config). ¡Documentación completa en español en [URL='https://github.com/Yeyessint/SlimeJumps/blob/master/README.es.md']GitHub[/URL]!
+SlimeJumps es el plugin de jump pads todo-en-uno para lobbies, y el único con [B]editor visual de rutas[/B] (puntos numerados flotantes y trayectoria dibujada con partículas, editable con la varita), [B]vista previa de trayectoria[/B] con física real y [B]pads de carga[/B] con barra en la actionbar. Además: rutas de vuelo, doble salto, hologramas nativos, GUI, presets, efectos de poción, comandos por pad, estadísticas, PlaceholderAPI y protección contra daño de caída. Mensajes en [B]español e inglés[/B] incluidos ([ICODE]language: es[/ICODE] en la config). ¡Documentación completa en español en [URL='https://github.com/Yeyessint/SlimeJumps/blob/master/README.es.md']GitHub[/URL]!
 
 [CENTER][SIZE=4][B][COLOR=#5edb6a]If you enjoy SlimeJumps, please leave a ★★★★★ review and a ⭐ on GitHub![/COLOR][/B][/SIZE][/CENTER]
 
 --- FIN DE LA DESCRIPCIÓN ---
 
 Consejos para la publicación:
-1. Las dos imágenes ([IMG]) apuntan a la carpeta assets/ del repo en GitHub;
-   funcionan en cuanto merges el PR con los assets.
-2. Sube el jar de la release v2.4.0 como archivo del recurso, o marca
-   "external download" con el enlace a GitHub Releases.
-3. Cuando publiques una versión nueva, usa la pestaña "Updates" de Spigot y
-   pega la sección correspondiente del CHANGELOG.md.
-4. Añade 2-3 capturas/GIFs in-game cuando puedas (un jugador saliendo
-   disparado, una ruta de vuelo con la estela, la GUI abierta): las capturas
-   reales son lo que más descargas genera.
+1. Sube el jar de la release v2.5.0 (GitHub Releases) como archivo del recurso.
+2. Para la pestaña "Updates" de Spigot, pega la sección [2.5.0] del CHANGELOG.md.
+3. Graba un GIF corto del editor visual de rutas y de la barra de carga:
+   son las dos features que nadie más tiene y las que más llaman la atención.
