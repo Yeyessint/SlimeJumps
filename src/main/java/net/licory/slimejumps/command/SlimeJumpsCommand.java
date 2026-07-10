@@ -10,6 +10,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,14 +29,19 @@ public final class SlimeJumpsCommand implements TabExecutor {
     private static final String ADMIN_PERMISSION = "slimejumps.admin";
     private static final Pattern NAME_PATTERN = Pattern.compile("[A-Za-z0-9_-]{1,32}");
     private static final List<String> SUBCOMMANDS = Arrays.asList(
-            "create", "remove", "list", "info", "tp", "near", "stats",
-            "setpower", "setvertical", "setcooldown", "setcommand",
-            "setroute", "setdirection", "setsound", "setparticle", "route", "reload", "help");
+            "create", "remove", "list", "info", "tp", "gui", "near", "stats",
+            "toggle", "rename", "setpower", "setvertical", "setcooldown", "setcommand",
+            "seteffect", "setmessage", "setroute", "setdirection", "setsound", "setparticle",
+            "route", "reload", "help");
     private static final List<String> ROUTE_SUBCOMMANDS = Arrays.asList(
             "create", "addpoint", "delpoint", "remove", "list", "info");
     private static final List<String> PAD_NAME_SUBCOMMANDS = Arrays.asList(
-            "remove", "delete", "info", "tp", "teleport", "setpower", "setvertical",
-            "setcooldown", "setcommand", "setroute", "setdirection", "setsound", "setparticle");
+            "remove", "delete", "info", "tp", "teleport", "toggle", "rename",
+            "setpower", "setvertical", "setcooldown", "setcommand", "seteffect",
+            "setmessage", "setroute", "setdirection", "setsound", "setparticle");
+    private static final List<String> COMMON_EFFECTS = Arrays.asList(
+            "none", "SPEED", "JUMP_BOOST", "SLOW_FALLING", "LEVITATION",
+            "GLOWING", "REGENERATION", "RESISTANCE", "INVISIBILITY");
     private static final double DEFAULT_NEAR_RADIUS = 20.0D;
 
     private final SlimeJumpsPlugin plugin;
@@ -70,6 +76,11 @@ public final class SlimeJumpsCommand implements TabExecutor {
             case "setcommand" -> handleSetCommand(sender, args);
             case "near" -> handleNear(sender, args);
             case "stats" -> handleStats(sender);
+            case "gui" -> handleGui(sender);
+            case "toggle" -> handleToggle(sender, args);
+            case "rename" -> handleRename(sender, args);
+            case "seteffect" -> handleSetEffect(sender, args);
+            case "setmessage" -> handleSetMessage(sender, args);
             case "setroute" -> handleSetRoute(sender, args);
             case "setdirection" -> handleSetDirection(sender, args);
             case "setsound" -> handleSetSound(sender, args);
@@ -182,7 +193,13 @@ public final class SlimeJumpsCommand implements TabExecutor {
                 "sound", pad.getSound() != null ? pad.getSound() : "default",
                 "particle", pad.getParticle() != null ? pad.getParticle() : "default",
                 "cooldown", pad.getCooldownMs() != null ? pad.getCooldownMs() + "ms" : "default",
-                "command", pad.getCommand() != null ? pad.getCommand() : "-");
+                "command", pad.getCommand() != null ? pad.getCommand() : "-",
+                "status", pad.isEnabled() ? "enabled" : "disabled",
+                "effect", pad.getEffect() != null
+                        ? pad.getEffect() + " " + (pad.getEffectAmplifier() + 1)
+                                + " (" + pad.getEffectDuration() + "s)"
+                        : "-",
+                "message", pad.getMessage() != null ? pad.getMessage() : "-");
     }
 
     private void sendPadLine(CommandSender sender, JumpPad pad) {
@@ -248,6 +265,133 @@ public final class SlimeJumpsCommand implements TabExecutor {
                 "name", pad.getName(),
                 "setting", isPower ? "power" : "vertical",
                 "value", format(value));
+    }
+
+    private void handleGui(CommandSender sender) {
+        Messages messages = plugin.getMessages();
+        if (!(sender instanceof Player player)) {
+            messages.send(sender, "players-only");
+            return;
+        }
+        plugin.getPadListGui().open(player, 0);
+    }
+
+    private void handleToggle(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 2) {
+            messages.send(sender, "usage-toggle");
+            return;
+        }
+        JumpPad pad = plugin.getPadManager().get(args[1]);
+        if (pad == null) {
+            messages.send(sender, "pad-not-found", "name", args[1]);
+            return;
+        }
+        pad.setEnabled(!pad.isEnabled());
+        plugin.getPadManager().save();
+        messages.send(sender, pad.isEnabled() ? "pad-enabled" : "pad-disabled",
+                "name", pad.getName());
+    }
+
+    private void handleRename(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 3) {
+            messages.send(sender, "usage-rename");
+            return;
+        }
+        JumpPad pad = plugin.getPadManager().get(args[1]);
+        if (pad == null) {
+            messages.send(sender, "pad-not-found", "name", args[1]);
+            return;
+        }
+        String newName = args[2];
+        if (!NAME_PATTERN.matcher(newName).matches()) {
+            messages.send(sender, "invalid-name");
+            return;
+        }
+        String oldName = pad.getName();
+        JumpPad renamed = plugin.getPadManager().rename(pad, newName);
+        if (renamed == null) {
+            messages.send(sender, "pad-exists", "name", newName);
+            return;
+        }
+        plugin.getStatsManager().renamePad(oldName, renamed.getName());
+        messages.send(sender, "pad-renamed", "old", oldName, "name", renamed.getName());
+    }
+
+    private void handleSetEffect(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 3) {
+            messages.send(sender, "usage-seteffect");
+            return;
+        }
+        JumpPad pad = plugin.getPadManager().get(args[1]);
+        if (pad == null) {
+            messages.send(sender, "pad-not-found", "name", args[1]);
+            return;
+        }
+        if (args[2].equalsIgnoreCase("none")) {
+            pad.clearEffect();
+            plugin.getPadManager().save();
+            messages.send(sender, "pad-effect-cleared", "name", pad.getName());
+            return;
+        }
+
+        String effectName = args[2].toUpperCase(Locale.ROOT);
+        if (PotionEffectType.getByName(effectName) == null) {
+            messages.send(sender, "invalid-effect", "input", args[2]);
+            return;
+        }
+
+        int duration = 5;
+        int amplifier = 0;
+        if (args.length >= 4) {
+            try {
+                duration = Math.max(1, Integer.parseInt(args[3]));
+            } catch (NumberFormatException e) {
+                messages.send(sender, "invalid-number", "input", args[3]);
+                return;
+            }
+        }
+        if (args.length >= 5) {
+            try {
+                amplifier = Math.max(0, Integer.parseInt(args[4]) - 1);
+            } catch (NumberFormatException e) {
+                messages.send(sender, "invalid-number", "input", args[4]);
+                return;
+            }
+        }
+
+        pad.setEffect(effectName, duration, amplifier);
+        plugin.getPadManager().save();
+        messages.send(sender, "pad-effect-set",
+                "name", pad.getName(),
+                "effect", effectName,
+                "duration", String.valueOf(duration),
+                "level", String.valueOf(amplifier + 1));
+    }
+
+    private void handleSetMessage(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 3) {
+            messages.send(sender, "usage-setmessage");
+            return;
+        }
+        JumpPad pad = plugin.getPadManager().get(args[1]);
+        if (pad == null) {
+            messages.send(sender, "pad-not-found", "name", args[1]);
+            return;
+        }
+        if (args.length == 3 && args[2].equalsIgnoreCase("none")) {
+            pad.setMessage(null);
+            plugin.getPadManager().save();
+            messages.send(sender, "pad-message-cleared", "name", pad.getName());
+            return;
+        }
+        String text = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+        pad.setMessage(text);
+        plugin.getPadManager().save();
+        messages.send(sender, "pad-message-set", "name", pad.getName(), "message", text);
     }
 
     private void handleSetCooldown(CommandSender sender, String[] args) {
@@ -698,8 +842,11 @@ public final class SlimeJumpsCommand implements TabExecutor {
                 case "setcooldown" -> {
                     return filter(List.of("default"), args[2]);
                 }
-                case "setcommand" -> {
+                case "setcommand", "setmessage" -> {
                     return filter(List.of("none"), args[2]);
+                }
+                case "seteffect" -> {
+                    return filter(COMMON_EFFECTS, args[2]);
                 }
                 case "setparticle" -> {
                     List<String> options = new ArrayList<>();

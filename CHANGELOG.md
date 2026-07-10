@@ -2,6 +2,17 @@
 
 All notable changes to SlimeJumps are documented in this file.
 
+## [2.3.0] - 2026-07-10
+
+### Added
+- **Pads GUI**: `/sj gui` opens a paginated chest menu listing every pad with its details; clicking a pad teleports you to it.
+- **Toggle pads**: `/sj toggle <pad>` enables/disables a pad without deleting it (disabled pads show as barriers in the GUI and stop emitting particles).
+- **Rename pads**: `/sj rename <pad> <newname>` keeps every setting and transfers the pad's statistics.
+- **Potion effects per pad**: `/sj seteffect <pad> <effect|none> [seconds] [level]` applies an effect when the pad is used.
+- **Action bar messages per pad**: `/sj setmessage <pad> <text...|none>` with `&` color codes and `%player%` placeholder.
+- **Disabled worlds**: pads, slime block mode and routes are inert in worlds listed under `disabled-worlds`.
+- `/sj info` now also shows status, effect and message.
+
 ## [2.2.0] - 2026-07-10
 
 ### Added

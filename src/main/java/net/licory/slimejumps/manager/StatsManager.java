@@ -96,6 +96,16 @@ public final class StatsManager {
         }
     }
 
+    /** Moves a renamed pad's counter to its new name. */
+    public void renamePad(String oldName, String newName) {
+        for (String key : new ArrayList<>(padUses.keySet())) {
+            if (key.equalsIgnoreCase(oldName)) {
+                padUses.merge(newName, padUses.remove(key), Long::sum);
+                dirty = true;
+            }
+        }
+    }
+
     /** Total launches recorded on this server. */
     public long getTotalLaunches() {
         return totalLaunches;

@@ -26,6 +26,9 @@ public final class ParticleTask implements Runnable {
         int count = plugin.getConfig().getInt("ambient-particles.count", 8);
 
         for (JumpPad pad : plugin.getPadManager().getAll()) {
+            if (!pad.isEnabled()) {
+                continue;
+            }
             Location location = pad.toLocation();
             if (location == null) {
                 continue;

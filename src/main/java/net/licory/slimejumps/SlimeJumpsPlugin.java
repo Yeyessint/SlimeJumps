@@ -1,6 +1,7 @@
 package net.licory.slimejumps;
 
 import net.licory.slimejumps.command.SlimeJumpsCommand;
+import net.licory.slimejumps.gui.PadListGui;
 import net.licory.slimejumps.listener.DoubleJumpListener;
 import net.licory.slimejumps.listener.JumpPadListener;
 import net.licory.slimejumps.manager.FlightManager;
@@ -30,6 +31,7 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
     private RouteManager routeManager;
     private FlightManager flightManager;
     private StatsManager statsManager;
+    private PadListGui padListGui;
     private Messages messages;
     private BukkitTask particleTask;
 
@@ -55,6 +57,9 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
         flightManager = new FlightManager(this);
         getServer().getPluginManager().registerEvents(flightManager, this);
         getServer().getScheduler().runTaskTimer(this, flightManager, 1L, 1L);
+
+        padListGui = new PadListGui(this);
+        getServer().getPluginManager().registerEvents(padListGui, this);
 
         registerCommand();
         getServer().getPluginManager().registerEvents(new JumpPadListener(this), this);
@@ -139,6 +144,10 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
 
     public StatsManager getStatsManager() {
         return statsManager;
+    }
+
+    public PadListGui getPadListGui() {
+        return padListGui;
     }
 
     public Messages getMessages() {

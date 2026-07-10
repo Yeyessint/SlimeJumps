@@ -4,11 +4,16 @@ import net.licory.slimejumps.SlimeJumpsPlugin;
 import net.licory.slimejumps.manager.CooldownManager;
 import net.licory.slimejumps.model.JumpPad;
 import net.licory.slimejumps.model.Route;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -55,6 +60,9 @@ public final class JumpPadListener implements Listener {
         }
 
         Player player = event.getPlayer();
+        if (plugin.getConfig().getStringList("disabled-worlds").contains(to.getWorld().getName())) {
+            return;
+        }
         if (plugin.getFlightManager().isFlying(player.getUniqueId())) {
             return;
         }
@@ -69,6 +77,9 @@ public final class JumpPadListener implements Listener {
         );
 
         JumpPad pad = plugin.getPadManager().getAt(below);
+        if (pad != null && !pad.isEnabled()) {
+            return;
+        }
         if (pad == null && !isSlimeBlockPad(below)) {
             return;
         }
@@ -106,13 +117,33 @@ public final class JumpPadListener implements Listener {
         finishUse(player, pad);
     }
 
-    /** Records the launch and runs the pad's console command, if any. */
+    /**
+     * Records the launch and applies the pad's extras: console command,
+     * potion effect and action bar message.
+     */
     private void finishUse(Player player, JumpPad pad) {
         plugin.getStatsManager().recordLaunch(pad);
+        if (pad == null) {
+            return;
+        }
 
-        if (pad != null && pad.getCommand() != null && !pad.getCommand().isBlank()) {
+        if (pad.getCommand() != null && !pad.getCommand().isBlank()) {
             String command = pad.getCommand().replace("%player%", player.getName());
             plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), command);
+        }
+
+        if (pad.getEffect() != null) {
+            PotionEffectType type = PotionEffectType.getByName(pad.getEffect());
+            if (type != null) {
+                player.addPotionEffect(new PotionEffect(type,
+                        pad.getEffectDuration() * 20, pad.getEffectAmplifier()));
+            }
+        }
+
+        if (pad.getMessage() != null && !pad.getMessage().isBlank()) {
+            String text = ChatColor.translateAlternateColorCodes('&',
+                    pad.getMessage().replace("%player%", player.getName()));
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(text));
         }
     }
 

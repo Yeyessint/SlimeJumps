@@ -13,6 +13,11 @@ stats:
   # Count how many times each pad is used (see /sj stats).
   enabled: true
 
+# Worlds where jump pads, slime block mode and routes are disabled.
+disabled-worlds: []
+#  - creative_world
+#  - build_world
+
 pads:
   # Default horizontal launch strength for newly created pads.
   default-power: 1.6

@@ -18,6 +18,11 @@ SlimeJumps añade **jump pads** configurables a tu servidor de Minecraft: las pl
 - 🚀 **Doble salto** (opcional): impulso en el aire al pulsar la tecla de salto, estilo lobby, compatible con el `/fly` de otros plugins.
 - ⌨️ **Comandos de consola por pad** — ejecuta cualquier comando al usar un pad (placeholder `%player%`), p. ej. enviar jugadores a otro servidor o dar recompensas.
 - 📊 **Estadísticas de lanzamientos** — `/sj stats` muestra el total de lanzamientos y los pads más usados.
+- 🖱️ **GUI de pads** — `/sj gui` abre un menú paginado con todos los pads; haz clic en uno para teletransportarte.
+- 🧪 **Efectos de poción por pad** — aplica velocidad, caída lenta, levitación… al usar un pad.
+- 💬 **Mensajes en la actionbar por pad**, con códigos de color y placeholder `%player%`.
+- 🔀 **Activa/desactiva y renombra pads** sin tener que recrearlos.
+- 🌐 **Lista de mundos deshabilitados** para que los pads no funcionen en mundos creativos o de construcción.
 - 📍 **`/sj near`** — encuentra los pads a tu alrededor mientras construyes.
 - 🔔 **Aviso de actualizaciones** — notifica cuando se publica una nueva versión en GitHub (desactivable).
 - ✨ **Partículas ambientales** sobre cada pad para que los jugadores los vean (totalmente configurables).
@@ -54,8 +59,13 @@ El comando principal es `/slimejumps` (alias: `/sj`, `/jumppads`).
 | `/sj list` | Lista todos los pads con sus coordenadas |
 | `/sj info <nombre>` | Muestra los detalles de un pad |
 | `/sj tp <nombre>` | Teletranspórtate a un pad |
+| `/sj gui` | Menú paginado con todos los pads — clic para teletransportarte |
 | `/sj near [radio]` | Lista los pads cercanos a ti (radio por defecto: 20 bloques) |
 | `/sj stats` | Estadísticas de lanzamientos y pads más usados |
+| `/sj toggle <pad>` | Activa o desactiva un pad sin borrarlo |
+| `/sj rename <pad> <nuevonombre>` | Renombra un pad conservando toda su configuración |
+| `/sj seteffect <pad> <efecto\|none> [segundos] [nivel]` | Efecto de poción aplicado al usarlo |
+| `/sj setmessage <pad> <texto...\|none>` | Mensaje en la actionbar al usarlo (`%player%`, colores `&`) |
 | `/sj setpower <nombre> <valor>` | Cambia la fuerza horizontal de un pad |
 | `/sj setvertical <nombre> <valor>` | Cambia la fuerza vertical de un pad |
 | `/sj setcooldown <pad> <ms\|default>` | Cooldown propio del pad |
@@ -99,6 +109,8 @@ update-checker: true    # Avisa a los admins cuando hay nueva versión
 
 stats:
   enabled: true         # Contabiliza el uso de pads para /sj stats
+
+disabled-worlds: []     # Mundos donde los pads y rutas no funcionan
 
 pads:
   default-power: 1.6    # Fuerza horizontal por defecto de los pads nuevos

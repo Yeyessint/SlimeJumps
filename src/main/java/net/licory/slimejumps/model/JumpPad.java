@@ -26,6 +26,11 @@ public final class JumpPad {
     private String particle;
     private String command;
     private Long cooldownMs;
+    private boolean enabled = true;
+    private String effect;
+    private int effectDuration;
+    private int effectAmplifier;
+    private String message;
 
     public JumpPad(String name, String worldName, int x, int y, int z, double power, double vertical) {
         this.name = name;
@@ -137,6 +142,54 @@ public final class JumpPad {
 
     public void setCooldownMs(Long cooldownMs) {
         this.cooldownMs = cooldownMs;
+    }
+
+    /** Whether this pad launches players. Disabled pads stay registered but inert. */
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    /** Potion effect applied on use, or {@code null} for none. */
+    public String getEffect() {
+        return effect;
+    }
+
+    /** Duration of the potion effect, in seconds. */
+    public int getEffectDuration() {
+        return effectDuration;
+    }
+
+    /** Amplifier of the potion effect (0 = level I). */
+    public int getEffectAmplifier() {
+        return effectAmplifier;
+    }
+
+    public void setEffect(String effect, int durationSeconds, int amplifier) {
+        this.effect = effect;
+        this.effectDuration = durationSeconds;
+        this.effectAmplifier = amplifier;
+    }
+
+    public void clearEffect() {
+        this.effect = null;
+        this.effectDuration = 0;
+        this.effectAmplifier = 0;
+    }
+
+    /**
+     * Action bar message shown when the pad is used ({@code %player%} is
+     * replaced by the player's name), or {@code null} for none.
+     */
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     /**

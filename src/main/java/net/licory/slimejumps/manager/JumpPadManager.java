@@ -82,6 +82,14 @@ public final class JumpPadManager {
             if (section.contains("cooldown")) {
                 pad.setCooldownMs(section.getLong("cooldown", 0L));
             }
+            pad.setEnabled(section.getBoolean("enabled", true));
+            String effect = section.getString("effect");
+            if (effect != null) {
+                pad.setEffect(effect,
+                        section.getInt("effect-duration", 5),
+                        section.getInt("effect-amplifier", 0));
+            }
+            pad.setMessage(section.getString("message"));
             index(pad);
         }
     }
@@ -103,6 +111,15 @@ public final class JumpPadManager {
             data.set(path + ".particle", pad.getParticle());
             data.set(path + ".command", pad.getCommand());
             data.set(path + ".cooldown", pad.getCooldownMs());
+            if (!pad.isEnabled()) {
+                data.set(path + ".enabled", false);
+            }
+            if (pad.getEffect() != null) {
+                data.set(path + ".effect", pad.getEffect());
+                data.set(path + ".effect-duration", pad.getEffectDuration());
+                data.set(path + ".effect-amplifier", pad.getEffectAmplifier());
+            }
+            data.set(path + ".message", pad.getMessage());
         }
         try {
             data.save(file);
@@ -195,6 +212,37 @@ public final class JumpPadManager {
         padsByBlock.remove(pad.blockKey());
         save();
         return true;
+    }
+
+    /**
+     * Renames a pad, keeping every other setting.
+     *
+     * @return the renamed pad, or {@code null} if the new name is taken
+     */
+    public JumpPad rename(JumpPad pad, String newName) {
+        if (padsByName.containsKey(newName.toLowerCase(Locale.ROOT))) {
+            return null;
+        }
+        padsByName.remove(pad.getName().toLowerCase(Locale.ROOT));
+        padsByBlock.remove(pad.blockKey());
+
+        JumpPad renamed = new JumpPad(newName, pad.getWorldName(),
+                pad.getX(), pad.getY(), pad.getZ(), pad.getPower(), pad.getVertical());
+        renamed.setRouteName(pad.getRouteName());
+        renamed.setFixedYaw(pad.getFixedYaw());
+        renamed.setSound(pad.getSound());
+        renamed.setParticle(pad.getParticle());
+        renamed.setCommand(pad.getCommand());
+        renamed.setCooldownMs(pad.getCooldownMs());
+        renamed.setEnabled(pad.isEnabled());
+        if (pad.getEffect() != null) {
+            renamed.setEffect(pad.getEffect(), pad.getEffectDuration(), pad.getEffectAmplifier());
+        }
+        renamed.setMessage(pad.getMessage());
+
+        index(renamed);
+        save();
+        return renamed;
     }
 
     /** Looks up a pad by name (case-insensitive). */

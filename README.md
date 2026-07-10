@@ -18,6 +18,11 @@ SlimeJumps adds configurable **jump pads** to your Minecraft server — the laun
 - 🚀 **Double jump** (optional): lobby-style mid-air boost when pressing the jump key, compatible with `/fly` from other plugins.
 - ⌨️ **Per-pad console commands** — run any command when a pad is used (`%player%` placeholder), e.g. send players to another server or give rewards.
 - 📊 **Launch statistics** — `/sj stats` shows total launches and the most used pads.
+- 🖱️ **Pads GUI** — `/sj gui` opens a paginated menu of all pads; click one to teleport to it.
+- 🧪 **Potion effects per pad** — apply speed, slow falling, levitation… when a pad is used.
+- 💬 **Action bar messages per pad**, with color codes and `%player%` placeholder.
+- 🔀 **Toggle and rename pads** without recreating them.
+- 🌐 **Disabled worlds** list to keep pads inert in build or creative worlds.
 - 📍 **`/sj near`** — find the pads around you while building.
 - 🔔 **Update checker** — get notified when a new release is published on GitHub (can be disabled).
 - ✨ **Ambient particles** above each pad so players can spot them (fully configurable).
@@ -54,8 +59,13 @@ The main command is `/slimejumps` (aliases: `/sj`, `/jumppads`).
 | `/sj list` | List all pads with their coordinates |
 | `/sj info <name>` | Show the details of a pad |
 | `/sj tp <name>` | Teleport to a pad |
+| `/sj gui` | Paginated menu of all pads — click to teleport |
 | `/sj near [radius]` | List pads close to you (default radius: 20 blocks) |
 | `/sj stats` | Launch statistics and the most used pads |
+| `/sj toggle <pad>` | Enable or disable a pad without deleting it |
+| `/sj rename <pad> <newname>` | Rename a pad keeping all its settings |
+| `/sj seteffect <pad> <effect\|none> [seconds] [level]` | Potion effect applied on use |
+| `/sj setmessage <pad> <text...\|none>` | Action bar message shown on use (`%player%`, `&` colors) |
 | `/sj setpower <name> <value>` | Change a pad's horizontal strength |
 | `/sj setvertical <name> <value>` | Change a pad's vertical strength |
 | `/sj setcooldown <pad> <ms\|default>` | Per-pad cooldown override |
@@ -99,6 +109,8 @@ update-checker: true    # Notify admins when a new release is out
 
 stats:
   enabled: true         # Track pad usage for /sj stats
+
+disabled-worlds: []     # Worlds where pads and routes are inert
 
 pads:
   default-power: 1.6    # Default horizontal strength for new pads
