@@ -2,7 +2,9 @@ package net.licory.slimejumps;
 
 import net.licory.slimejumps.command.SlimeJumpsCommand;
 import net.licory.slimejumps.listener.JumpPadListener;
+import net.licory.slimejumps.manager.FlightManager;
 import net.licory.slimejumps.manager.JumpPadManager;
+import net.licory.slimejumps.manager.RouteManager;
 import net.licory.slimejumps.task.ParticleTask;
 import net.licory.slimejumps.util.Messages;
 import org.bukkit.command.PluginCommand;
@@ -13,12 +15,14 @@ import org.bukkit.scheduler.BukkitTask;
  * Main entry point of the SlimeJumps plugin.
  * <p>
  * SlimeJumps provides configurable jump pads for lobbies and hubs:
- * named pads with per-pad launch power, ambient particles, launch
- * sounds, cooldowns and fall damage protection.
+ * named pads with per-pad launch power, flight routes, ambient
+ * particles, launch sounds, cooldowns and fall damage protection.
  */
 public final class SlimeJumpsPlugin extends JavaPlugin {
 
     private JumpPadManager padManager;
+    private RouteManager routeManager;
+    private FlightManager flightManager;
     private Messages messages;
     private BukkitTask particleTask;
 
@@ -33,11 +37,19 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
         padManager.load();
         padManager.migrateLegacyConfig();
 
+        routeManager = new RouteManager(this);
+        routeManager.load();
+
+        flightManager = new FlightManager(this);
+        getServer().getPluginManager().registerEvents(flightManager, this);
+        getServer().getScheduler().runTaskTimer(this, flightManager, 1L, 1L);
+
         registerCommand();
         getServer().getPluginManager().registerEvents(new JumpPadListener(this), this);
         startParticleTask();
 
-        getLogger().info("SlimeJumps enabled with " + padManager.getAll().size() + " jump pad(s).");
+        getLogger().info("SlimeJumps enabled with " + padManager.getAll().size()
+                + " jump pad(s) and " + routeManager.getAll().size() + " route(s).");
     }
 
     @Override
@@ -60,6 +72,7 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
         reloadConfig();
         messages.load();
         padManager.load();
+        routeManager.load();
         restartParticleTask();
     }
 
@@ -92,6 +105,14 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
 
     public JumpPadManager getPadManager() {
         return padManager;
+    }
+
+    public RouteManager getRouteManager() {
+        return routeManager;
+    }
+
+    public FlightManager getFlightManager() {
+        return flightManager;
     }
 
     public Messages getMessages() {

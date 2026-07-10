@@ -72,6 +72,12 @@ public final class JumpPadManager {
                     section.getDouble("power", defaultPower),
                     section.getDouble("vertical", defaultVertical)
             );
+            pad.setRouteName(section.getString("route"));
+            if (section.contains("yaw")) {
+                pad.setFixedYaw((float) section.getDouble("yaw"));
+            }
+            pad.setSound(section.getString("sound"));
+            pad.setParticle(section.getString("particle"));
             index(pad);
         }
     }
@@ -87,6 +93,10 @@ public final class JumpPadManager {
             data.set(path + ".z", pad.getZ());
             data.set(path + ".power", pad.getPower());
             data.set(path + ".vertical", pad.getVertical());
+            data.set(path + ".route", pad.getRouteName());
+            data.set(path + ".yaw", pad.getFixedYaw() == null ? null : pad.getFixedYaw().doubleValue());
+            data.set(path + ".sound", pad.getSound());
+            data.set(path + ".particle", pad.getParticle());
         }
         try {
             data.save(file);

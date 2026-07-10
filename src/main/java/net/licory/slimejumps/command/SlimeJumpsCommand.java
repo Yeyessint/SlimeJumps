@@ -2,8 +2,10 @@ package net.licory.slimejumps.command;
 
 import net.licory.slimejumps.SlimeJumpsPlugin;
 import net.licory.slimejumps.model.JumpPad;
+import net.licory.slimejumps.model.Route;
 import net.licory.slimejumps.util.Messages;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -16,15 +18,23 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
- * Handles {@code /slimejumps} and its subcommands:
- * create, remove, list, info, tp, setpower, setvertical, reload and help.
+ * Handles {@code /slimejumps} and its subcommands: pad management
+ * (create, remove, list, info, tp, setpower, setvertical, setroute,
+ * setdirection, setsound, setparticle), route management
+ * ({@code /sj route ...}), reload and help.
  */
 public final class SlimeJumpsCommand implements TabExecutor {
 
     private static final String ADMIN_PERMISSION = "slimejumps.admin";
     private static final Pattern NAME_PATTERN = Pattern.compile("[A-Za-z0-9_-]{1,32}");
     private static final List<String> SUBCOMMANDS = Arrays.asList(
-            "create", "remove", "list", "info", "tp", "setpower", "setvertical", "reload", "help");
+            "create", "remove", "list", "info", "tp", "setpower", "setvertical",
+            "setroute", "setdirection", "setsound", "setparticle", "route", "reload", "help");
+    private static final List<String> ROUTE_SUBCOMMANDS = Arrays.asList(
+            "create", "addpoint", "delpoint", "remove", "list", "info");
+    private static final List<String> PAD_NAME_SUBCOMMANDS = Arrays.asList(
+            "remove", "delete", "info", "tp", "teleport", "setpower", "setvertical",
+            "setroute", "setdirection", "setsound", "setparticle");
 
     private final SlimeJumpsPlugin plugin;
 
@@ -54,6 +64,11 @@ public final class SlimeJumpsCommand implements TabExecutor {
             case "tp", "teleport" -> handleTeleport(sender, args);
             case "setpower" -> handleSetValue(sender, args, true);
             case "setvertical" -> handleSetValue(sender, args, false);
+            case "setroute" -> handleSetRoute(sender, args);
+            case "setdirection" -> handleSetDirection(sender, args);
+            case "setsound" -> handleSetSound(sender, args);
+            case "setparticle" -> handleSetParticle(sender, args);
+            case "route" -> handleRoute(sender, args);
             case "reload" -> {
                 plugin.reload();
                 messages.send(sender, "reloaded");
@@ -62,6 +77,10 @@ public final class SlimeJumpsCommand implements TabExecutor {
         }
         return true;
     }
+
+    // ------------------------------------------------------------------
+    // Pad subcommands
+    // ------------------------------------------------------------------
 
     private void handleCreate(CommandSender sender, String[] args) {
         Messages messages = plugin.getMessages();
@@ -134,14 +153,7 @@ public final class SlimeJumpsCommand implements TabExecutor {
         }
         messages.send(sender, "list-header", "count", String.valueOf(pads.size()));
         for (JumpPad pad : pads) {
-            messages.send(sender, "list-entry",
-                    "name", pad.getName(),
-                    "world", pad.getWorldName(),
-                    "x", String.valueOf(pad.getX()),
-                    "y", String.valueOf(pad.getY()),
-                    "z", String.valueOf(pad.getZ()),
-                    "power", format(pad.getPower()),
-                    "vertical", format(pad.getVertical()));
+            sendPadLine(sender, pad);
         }
     }
 
@@ -156,7 +168,16 @@ public final class SlimeJumpsCommand implements TabExecutor {
             messages.send(sender, "pad-not-found", "name", args[1]);
             return;
         }
-        messages.send(sender, "list-entry",
+        sendPadLine(sender, pad);
+        messages.send(sender, "pad-detail",
+                "route", pad.getRouteName() != null ? pad.getRouteName() : "-",
+                "direction", pad.getFixedYaw() != null ? "fixed (" + format(pad.getFixedYaw()) + "°)" : "look",
+                "sound", pad.getSound() != null ? pad.getSound() : "default",
+                "particle", pad.getParticle() != null ? pad.getParticle() : "default");
+    }
+
+    private void sendPadLine(CommandSender sender, JumpPad pad) {
+        plugin.getMessages().send(sender, "list-entry",
                 "name", pad.getName(),
                 "world", pad.getWorldName(),
                 "x", String.valueOf(pad.getX()),
@@ -220,6 +241,278 @@ public final class SlimeJumpsCommand implements TabExecutor {
                 "value", format(value));
     }
 
+    private void handleSetRoute(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 3) {
+            messages.send(sender, "usage-setroute");
+            return;
+        }
+        JumpPad pad = plugin.getPadManager().get(args[1]);
+        if (pad == null) {
+            messages.send(sender, "pad-not-found", "name", args[1]);
+            return;
+        }
+
+        if (args[2].equalsIgnoreCase("none")) {
+            pad.setRouteName(null);
+            plugin.getPadManager().save();
+            messages.send(sender, "pad-route-cleared", "name", pad.getName());
+            return;
+        }
+
+        Route route = plugin.getRouteManager().get(args[2]);
+        if (route == null) {
+            messages.send(sender, "route-not-found", "name", args[2]);
+            return;
+        }
+        pad.setRouteName(route.getName());
+        plugin.getPadManager().save();
+        messages.send(sender, "pad-route-set", "name", pad.getName(), "route", route.getName());
+    }
+
+    private void handleSetDirection(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 3) {
+            messages.send(sender, "usage-setdirection");
+            return;
+        }
+        JumpPad pad = plugin.getPadManager().get(args[1]);
+        if (pad == null) {
+            messages.send(sender, "pad-not-found", "name", args[1]);
+            return;
+        }
+
+        String mode = args[2].toLowerCase(Locale.ROOT);
+        if (mode.equals("look")) {
+            pad.setFixedYaw(null);
+            plugin.getPadManager().save();
+            messages.send(sender, "pad-direction-look", "name", pad.getName());
+        } else if (mode.equals("here")) {
+            if (!(sender instanceof Player player)) {
+                messages.send(sender, "players-only");
+                return;
+            }
+            float yaw = player.getLocation().getYaw();
+            pad.setFixedYaw(yaw);
+            plugin.getPadManager().save();
+            messages.send(sender, "pad-direction-fixed",
+                    "name", pad.getName(), "yaw", format(yaw));
+        } else {
+            messages.send(sender, "usage-setdirection");
+        }
+    }
+
+    private void handleSetSound(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 3) {
+            messages.send(sender, "usage-setsound");
+            return;
+        }
+        JumpPad pad = plugin.getPadManager().get(args[1]);
+        if (pad == null) {
+            messages.send(sender, "pad-not-found", "name", args[1]);
+            return;
+        }
+        if (args[2].equalsIgnoreCase("default")) {
+            pad.setSound(null);
+            plugin.getPadManager().save();
+            messages.send(sender, "pad-updated",
+                    "name", pad.getName(), "setting", "sound", "value", "default");
+            return;
+        }
+        pad.setSound(args[2].toLowerCase(Locale.ROOT));
+        plugin.getPadManager().save();
+        messages.send(sender, "pad-updated",
+                "name", pad.getName(), "setting", "sound", "value", pad.getSound());
+    }
+
+    private void handleSetParticle(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 3) {
+            messages.send(sender, "usage-setparticle");
+            return;
+        }
+        JumpPad pad = plugin.getPadManager().get(args[1]);
+        if (pad == null) {
+            messages.send(sender, "pad-not-found", "name", args[1]);
+            return;
+        }
+        if (args[2].equalsIgnoreCase("default")) {
+            pad.setParticle(null);
+            plugin.getPadManager().save();
+            messages.send(sender, "pad-updated",
+                    "name", pad.getName(), "setting", "particle", "value", "default");
+            return;
+        }
+
+        String name = args[2].toUpperCase(Locale.ROOT);
+        try {
+            Particle.valueOf(name);
+        } catch (IllegalArgumentException e) {
+            messages.send(sender, "invalid-particle", "input", args[2]);
+            return;
+        }
+        pad.setParticle(name);
+        plugin.getPadManager().save();
+        messages.send(sender, "pad-updated",
+                "name", pad.getName(), "setting", "particle", "value", name);
+    }
+
+    // ------------------------------------------------------------------
+    // Route subcommands
+    // ------------------------------------------------------------------
+
+    private void handleRoute(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 2) {
+            messages.send(sender, "usage-route");
+            return;
+        }
+
+        switch (args[1].toLowerCase(Locale.ROOT)) {
+            case "create" -> handleRouteCreate(sender, args);
+            case "addpoint" -> handleRouteAddPoint(sender, args);
+            case "delpoint" -> handleRouteDelPoint(sender, args);
+            case "remove", "delete" -> handleRouteRemove(sender, args);
+            case "list" -> handleRouteList(sender);
+            case "info" -> handleRouteInfo(sender, args);
+            default -> messages.send(sender, "usage-route");
+        }
+    }
+
+    private void handleRouteCreate(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (!(sender instanceof Player player)) {
+            messages.send(sender, "players-only");
+            return;
+        }
+        if (args.length < 3) {
+            messages.send(sender, "usage-route-create");
+            return;
+        }
+        String name = args[2];
+        if (!NAME_PATTERN.matcher(name).matches()) {
+            messages.send(sender, "invalid-name");
+            return;
+        }
+        Route route = plugin.getRouteManager().create(name, player.getLocation());
+        if (route == null) {
+            messages.send(sender, "route-exists", "name", name);
+            return;
+        }
+        messages.send(sender, "route-created", "name", route.getName());
+    }
+
+    private void handleRouteAddPoint(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (!(sender instanceof Player player)) {
+            messages.send(sender, "players-only");
+            return;
+        }
+        if (args.length < 3) {
+            messages.send(sender, "usage-route-addpoint");
+            return;
+        }
+        Route route = plugin.getRouteManager().get(args[2]);
+        if (route == null) {
+            messages.send(sender, "route-not-found", "name", args[2]);
+            return;
+        }
+        route.addWaypoint(Route.Waypoint.of(player.getLocation()));
+        plugin.getRouteManager().save();
+        messages.send(sender, "route-point-added",
+                "name", route.getName(),
+                "count", String.valueOf(route.getWaypoints().size()));
+    }
+
+    private void handleRouteDelPoint(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 4) {
+            messages.send(sender, "usage-route-delpoint");
+            return;
+        }
+        Route route = plugin.getRouteManager().get(args[2]);
+        if (route == null) {
+            messages.send(sender, "route-not-found", "name", args[2]);
+            return;
+        }
+        int index;
+        try {
+            index = Integer.parseInt(args[3]);
+        } catch (NumberFormatException e) {
+            messages.send(sender, "invalid-number", "input", args[3]);
+            return;
+        }
+        if (!route.removeWaypoint(index - 1)) {
+            messages.send(sender, "route-invalid-index",
+                    "name", route.getName(),
+                    "count", String.valueOf(route.getWaypoints().size()));
+            return;
+        }
+        plugin.getRouteManager().save();
+        messages.send(sender, "route-point-removed",
+                "name", route.getName(),
+                "index", String.valueOf(index),
+                "count", String.valueOf(route.getWaypoints().size()));
+    }
+
+    private void handleRouteRemove(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 3) {
+            messages.send(sender, "usage-route-remove");
+            return;
+        }
+        if (plugin.getRouteManager().delete(args[2])) {
+            messages.send(sender, "route-removed", "name", args[2]);
+        } else {
+            messages.send(sender, "route-not-found", "name", args[2]);
+        }
+    }
+
+    private void handleRouteList(CommandSender sender) {
+        Messages messages = plugin.getMessages();
+        var routes = plugin.getRouteManager().getAll();
+        if (routes.isEmpty()) {
+            messages.send(sender, "route-list-empty");
+            return;
+        }
+        messages.send(sender, "route-list-header", "count", String.valueOf(routes.size()));
+        for (Route route : routes) {
+            messages.send(sender, "route-list-entry",
+                    "name", route.getName(),
+                    "count", String.valueOf(route.getWaypoints().size()));
+        }
+    }
+
+    private void handleRouteInfo(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (args.length < 3) {
+            messages.send(sender, "usage-route-info");
+            return;
+        }
+        Route route = plugin.getRouteManager().get(args[2]);
+        if (route == null) {
+            messages.send(sender, "route-not-found", "name", args[2]);
+            return;
+        }
+        messages.send(sender, "route-info-header",
+                "name", route.getName(),
+                "count", String.valueOf(route.getWaypoints().size()));
+        int index = 1;
+        for (Route.Waypoint waypoint : route.getWaypoints()) {
+            messages.send(sender, "route-info-point",
+                    "index", String.valueOf(index++),
+                    "world", waypoint.world(),
+                    "x", format(waypoint.x()),
+                    "y", format(waypoint.y()),
+                    "z", format(waypoint.z()));
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------------
+
     private void sendHelp(CommandSender sender) {
         plugin.getMessages().getList("help").forEach(sender::sendMessage);
     }
@@ -235,6 +528,10 @@ public final class SlimeJumpsCommand implements TabExecutor {
                 : String.format(Locale.ROOT, "%.2f", value);
     }
 
+    // ------------------------------------------------------------------
+    // Tab completion
+    // ------------------------------------------------------------------
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (!sender.hasPermission(ADMIN_PERMISSION)) {
@@ -243,19 +540,69 @@ public final class SlimeJumpsCommand implements TabExecutor {
         if (args.length == 1) {
             return filter(SUBCOMMANDS, args[0]);
         }
+
+        String sub = args[0].toLowerCase(Locale.ROOT);
         if (args.length == 2) {
-            String sub = args[0].toLowerCase(Locale.ROOT);
-            if (sub.equals("remove") || sub.equals("delete") || sub.equals("info")
-                    || sub.equals("tp") || sub.equals("teleport")
-                    || sub.equals("setpower") || sub.equals("setvertical")) {
-                List<String> names = new ArrayList<>();
-                for (JumpPad pad : plugin.getPadManager().getAll()) {
-                    names.add(pad.getName());
+            if (sub.equals("route")) {
+                return filter(ROUTE_SUBCOMMANDS, args[1]);
+            }
+            if (PAD_NAME_SUBCOMMANDS.contains(sub)) {
+                return filter(padNames(), args[1]);
+            }
+        }
+        if (args.length == 3) {
+            switch (sub) {
+                case "setroute" -> {
+                    List<String> options = new ArrayList<>(routeNames());
+                    options.add("none");
+                    return filter(options, args[2]);
                 }
-                return filter(names, args[1]);
+                case "setdirection" -> {
+                    return filter(Arrays.asList("look", "here"), args[2]);
+                }
+                case "setparticle" -> {
+                    List<String> options = new ArrayList<>();
+                    options.add("default");
+                    for (Particle particle : Particle.values()) {
+                        options.add(particle.name());
+                    }
+                    return filter(options, args[2]);
+                }
+                case "setsound" -> {
+                    return filter(Arrays.asList("default", "entity.ender_dragon.flap",
+                            "entity.firework_rocket.launch", "entity.bat.takeoff",
+                            "block.piston.extend", "entity.player.levelup"), args[2]);
+                }
+                case "route" -> {
+                    String routeSub = args[1].toLowerCase(Locale.ROOT);
+                    if (routeSub.equals("addpoint") || routeSub.equals("delpoint")
+                            || routeSub.equals("remove") || routeSub.equals("delete")
+                            || routeSub.equals("info")) {
+                        return filter(routeNames(), args[2]);
+                    }
+                }
+                default -> {
+                    return List.of();
+                }
             }
         }
         return List.of();
+    }
+
+    private List<String> padNames() {
+        List<String> names = new ArrayList<>();
+        for (JumpPad pad : plugin.getPadManager().getAll()) {
+            names.add(pad.getName());
+        }
+        return names;
+    }
+
+    private List<String> routeNames() {
+        List<String> names = new ArrayList<>();
+        for (Route route : plugin.getRouteManager().getAll()) {
+            names.add(route.getName());
+        }
+        return names;
     }
 
     private static List<String> filter(List<String> options, String input) {

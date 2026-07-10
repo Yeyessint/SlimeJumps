@@ -3,6 +3,7 @@ package net.licory.slimejumps.listener;
 import net.licory.slimejumps.SlimeJumpsPlugin;
 import net.licory.slimejumps.manager.CooldownManager;
 import net.licory.slimejumps.model.JumpPad;
+import net.licory.slimejumps.model.Route;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -23,12 +24,15 @@ import java.util.UUID;
 /**
  * Detects players stepping on jump pads and launches them.
  * <p>
- * Two detection modes are supported:
+ * Three behaviours are supported:
  * <ul>
- *   <li><b>Registered pads</b> — named pads created with
- *       {@code /slimejumps create}, launched with their own power.</li>
+ *   <li><b>Directional pads</b> — launch the player towards where they
+ *       are looking (or along the pad's fixed direction).</li>
+ *   <li><b>Route pads</b> — pads linked to a route hand the player over
+ *       to the {@link net.licory.slimejumps.manager.FlightManager}, which
+ *       flies them along the route's waypoints.</li>
  *   <li><b>Slime block mode</b> — optionally, every slime block in the
- *       world acts as a pad (legacy 1.x behaviour).</li>
+ *       world acts as a directional pad (legacy 1.x behaviour).</li>
  * </ul>
  */
 public final class JumpPadListener implements Listener {
@@ -51,26 +55,23 @@ public final class JumpPadListener implements Listener {
         }
 
         Player player = event.getPlayer();
+        if (plugin.getFlightManager().isFlying(player.getUniqueId())) {
+            return;
+        }
+        if (player.isSneaking() && plugin.getConfig().getBoolean("pads.ignore-sneaking", false)) {
+            return;
+        }
+
         Block below = to.getWorld().getBlockAt(
                 to.getBlockX(),
                 (int) Math.floor(to.getY() - 0.0625D),
                 to.getBlockZ()
         );
 
-        double power;
-        double vertical;
-
         JumpPad pad = plugin.getPadManager().getAt(below);
-        if (pad != null) {
-            power = pad.getPower();
-            vertical = pad.getVertical();
-        } else if (isSlimeBlockPad(below)) {
-            power = plugin.getConfig().getDouble("slime-block-mode.power", 1.6D);
-            vertical = plugin.getConfig().getDouble("slime-block-mode.vertical", 1.0D);
-        } else {
+        if (pad == null && !isSlimeBlockPad(below)) {
             return;
         }
-
         if (!player.hasPermission(USE_PERMISSION)) {
             return;
         }
@@ -80,7 +81,25 @@ public final class JumpPadListener implements Listener {
             return;
         }
 
-        launch(player, power, vertical);
+        // Route pads fly the player along their route instead of launching.
+        if (pad != null && pad.getRouteName() != null) {
+            Route route = plugin.getRouteManager().get(pad.getRouteName());
+            if (route != null && plugin.getFlightManager().start(player, route)) {
+                playLaunchEffects(player, pad);
+                return;
+            }
+            // Route missing or empty: fall back to a directional launch.
+        }
+
+        if (pad != null) {
+            launch(player, pad.getPower(), pad.getVertical(), pad.getFixedYaw());
+        } else {
+            launch(player,
+                    plugin.getConfig().getDouble("slime-block-mode.power", 1.6D),
+                    plugin.getConfig().getDouble("slime-block-mode.vertical", 1.0D),
+                    null);
+        }
+        playLaunchEffects(player, pad);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -112,12 +131,12 @@ public final class JumpPadListener implements Listener {
     }
 
     /**
-     * Launches the player in the direction they are facing.
-     * The horizontal direction is derived from the yaw only, so looking
+     * Launches the player. The horizontal direction comes from the pad's
+     * fixed yaw when set, otherwise from the player's own yaw, so looking
      * straight up or down still produces a valid launch.
      */
-    private void launch(Player player, double power, double vertical) {
-        double yaw = Math.toRadians(player.getLocation().getYaw());
+    private void launch(Player player, double power, double vertical, Float fixedYaw) {
+        double yaw = Math.toRadians(fixedYaw != null ? fixedYaw : player.getLocation().getYaw());
         Vector velocity = new Vector(-Math.sin(yaw), 0.0D, Math.cos(yaw))
                 .multiply(power)
                 .setY(vertical);
@@ -127,23 +146,26 @@ public final class JumpPadListener implements Listener {
         if (plugin.getConfig().getBoolean("pads.prevent-fall-damage", true)) {
             fallProtected.put(player.getUniqueId(), System.currentTimeMillis());
         }
-
-        playLaunchEffects(player);
     }
 
-    private void playLaunchEffects(Player player) {
+    /** Plays launch effects, honouring per-pad sound/particle overrides. */
+    private void playLaunchEffects(Player player, JumpPad pad) {
         Location location = player.getLocation();
 
         if (plugin.getConfig().getBoolean("launch.sound.enabled", true)) {
-            String sound = plugin.getConfig().getString("launch.sound.name", "entity.ender_dragon.flap");
+            String sound = pad != null && pad.getSound() != null
+                    ? pad.getSound()
+                    : plugin.getConfig().getString("launch.sound.name", "entity.ender_dragon.flap");
             float volume = (float) plugin.getConfig().getDouble("launch.sound.volume", 1.0D);
             float pitch = (float) plugin.getConfig().getDouble("launch.sound.pitch", 1.0D);
             location.getWorld().playSound(location, sound, volume, pitch);
         }
 
         if (plugin.getConfig().getBoolean("launch.particles.enabled", true)) {
-            Particle particle = parseParticle(
-                    plugin.getConfig().getString("launch.particles.name", "CLOUD"), Particle.CLOUD);
+            String name = pad != null && pad.getParticle() != null
+                    ? pad.getParticle()
+                    : plugin.getConfig().getString("launch.particles.name", "CLOUD");
+            Particle particle = parseParticle(name, Particle.CLOUD);
             int count = plugin.getConfig().getInt("launch.particles.count", 20);
             location.getWorld().spawnParticle(particle, location, count, 0.3D, 0.2D, 0.3D, 0.05D);
         }

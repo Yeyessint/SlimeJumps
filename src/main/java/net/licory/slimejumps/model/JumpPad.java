@@ -20,6 +20,10 @@ public final class JumpPad {
     private final int z;
     private double power;
     private double vertical;
+    private String routeName;
+    private Float fixedYaw;
+    private String sound;
+    private String particle;
 
     public JumpPad(String name, String worldName, int x, int y, int z, double power, double vertical) {
         this.name = name;
@@ -67,6 +71,48 @@ public final class JumpPad {
 
     public void setVertical(double vertical) {
         this.vertical = vertical;
+    }
+
+    /**
+     * Name of the route this pad launches players along, or {@code null}
+     * for a regular directional launch.
+     */
+    public String getRouteName() {
+        return routeName;
+    }
+
+    public void setRouteName(String routeName) {
+        this.routeName = routeName;
+    }
+
+    /**
+     * Fixed launch yaw in degrees, or {@code null} to launch players in
+     * the direction they are looking.
+     */
+    public Float getFixedYaw() {
+        return fixedYaw;
+    }
+
+    public void setFixedYaw(Float fixedYaw) {
+        this.fixedYaw = fixedYaw;
+    }
+
+    /** Per-pad launch sound key, or {@code null} to use the global default. */
+    public String getSound() {
+        return sound;
+    }
+
+    public void setSound(String sound) {
+        this.sound = sound;
+    }
+
+    /** Per-pad launch particle name, or {@code null} to use the global default. */
+    public String getParticle() {
+        return particle;
+    }
+
+    public void setParticle(String particle) {
+        this.particle = particle;
     }
 
     /**

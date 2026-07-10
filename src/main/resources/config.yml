@@ -19,6 +19,9 @@ pads:
   prevent-fall-damage: true
   # How long (ms) after a launch the fall damage protection lasts.
   fall-protection-ms: 10000
+  # When true, sneaking players walk over pads without being launched
+  # (handy for staff while building).
+  ignore-sneaking: false
 
 launch:
   sound:
@@ -42,6 +45,32 @@ ambient-particles:
   count: 8
   # How often the particles are spawned, in server ticks (20 = 1 second).
   interval-ticks: 10
+
+routes:
+  # Flight speed along routes, in blocks per tick (20 ticks = 1 second).
+  speed: 1.2
+  # Abort a flight that has not finished after this many seconds.
+  timeout-seconds: 30
+  # Players are immune to all damage while flying a route.
+  protect-during-flight: true
+  # Fall damage grace period (ms) after landing at the end of a route.
+  landing-protection-ms: 5000
+  trail:
+    # Particle trail left behind players while they fly a route.
+    enabled: true
+    name: END_ROD
+    count: 3
+  arrival:
+    # Effects played when a player reaches the end of a route.
+    sound:
+      enabled: true
+      name: entity.player.levelup
+      volume: 1.0
+      pitch: 1.2
+    particles:
+      enabled: true
+      name: FIREWORK
+      count: 30
 
 slime-block-mode:
   # Legacy mode: when enabled, EVERY slime block in the world acts as a
