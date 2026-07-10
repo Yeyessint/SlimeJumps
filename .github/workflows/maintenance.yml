@@ -1,22 +1,24 @@
 name: Maintenance
 
 on:
-  workflow_dispatch:
-    inputs:
-      delete-branch:
-        description: 'Branch to delete'
-        required: true
+  push:
+    branches: [master]
 
 permissions:
   contents: write
 
 jobs:
-  delete-branch:
-    name: Delete branch
+  cleanup-merged-branches:
+    name: Delete merged branches
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Delete branch
-        run: git push origin --delete "${{ inputs.delete-branch }}"
+      - name: Delete branches already merged into master
+        run: |
+          for branch in $(git branch -r --merged origin/master | sed 's|^ *origin/||' | grep -vE '^(master$|HEAD)'); do
+            git push origin --delete "$branch" || true
+          done

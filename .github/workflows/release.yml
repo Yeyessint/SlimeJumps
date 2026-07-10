@@ -2,12 +2,10 @@ name: Release
 
 on:
   push:
-    tags: ['v*']
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Release tag (e.g. v2.4.0)'
-        required: true
+    branches: [master]
+    paths:
+      - 'pom.xml'
+      - '.github/workflows/release.yml'
 
 permissions:
   contents: write
@@ -30,9 +28,13 @@ jobs:
       - name: Build
         run: mvn -B package
 
-      - name: Create GitHub release
+      - name: Read project version
+        id: version
+        run: echo "version=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.tag || github.ref_name }}
+          tag_name: v${{ steps.version.outputs.version }}
           files: target/SlimeJumps-*.jar
           generate_release_notes: true
