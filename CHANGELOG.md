@@ -2,6 +2,17 @@
 
 All notable changes to SlimeJumps are documented in this file.
 
+## [2.2.0] - 2026-07-10
+
+### Added
+- **Double jump** (optional): lobby-style mid-air boost when pressing the jump key, with its own power, cooldown, sound and particles. Disabled in creative/spectator and compatible with `/fly` from other plugins (permission: `slimejumps.doublejump`).
+- **Per-pad console commands**: `/sj setcommand <pad> <command...|none>` runs a command as the console whenever the pad is used, with a `%player%` placeholder.
+- **Per-pad cooldown**: `/sj setcooldown <pad> <ms|default>` overrides the global cooldown.
+- **Launch statistics**: `/sj stats` shows the server-wide launch total and the top 10 most used pads, persisted in `stats.yml` (toggle with `stats.enabled`).
+- **`/sj near [radius]`**: lists the pads around you sorted by distance — handy while building.
+- **Update checker**: checks GitHub releases on startup and notifies the console and joining admins when a new version is available (toggle with `update-checker`).
+- `/sj info` now also shows the pad's cooldown and command.
+
 ## [2.1.0] - 2026-07-10
 
 ### Added

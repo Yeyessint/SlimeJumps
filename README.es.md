@@ -14,7 +14,12 @@ SlimeJumps añade **jump pads** configurables a tu servidor de Minecraft: las pl
 - ✈️ **Rutas de vuelo** — vincula un pad a una ruta y los jugadores que lo pisen saldrán volando por tus waypoints hasta un destino, con estela de partículas y efectos de llegada (perfecto para llevar jugadores del lobby a una zona de juego).
 - 🎯 **Potencia por pad** — fuerza horizontal y vertical configurable para cada pad.
 - 🧭 **Dirección fija o libre** — los pads pueden lanzar hacia donde mira el jugador, o siempre en una dirección fija.
-- 🎨 **Sonido y partícula por pad**, además de los valores globales por defecto.
+- 🎨 **Sonido, partícula y cooldown por pad**, además de los valores globales por defecto.
+- 🚀 **Doble salto** (opcional): impulso en el aire al pulsar la tecla de salto, estilo lobby, compatible con el `/fly` de otros plugins.
+- ⌨️ **Comandos de consola por pad** — ejecuta cualquier comando al usar un pad (placeholder `%player%`), p. ej. enviar jugadores a otro servidor o dar recompensas.
+- 📊 **Estadísticas de lanzamientos** — `/sj stats` muestra el total de lanzamientos y los pads más usados.
+- 📍 **`/sj near`** — encuentra los pads a tu alrededor mientras construyes.
+- 🔔 **Aviso de actualizaciones** — notifica cuando se publica una nueva versión en GitHub (desactivable).
 - ✨ **Partículas ambientales** sobre cada pad para que los jugadores los vean (totalmente configurables).
 - 🛡️ **Protección contra daño de caída** tras lanzamientos y aterrizajes de ruta, e inmunidad total mientras se vuela una ruta.
 - ⏱️ **Cooldown anti-spam** para que los pads no se puedan abusar.
@@ -49,8 +54,12 @@ El comando principal es `/slimejumps` (alias: `/sj`, `/jumppads`).
 | `/sj list` | Lista todos los pads con sus coordenadas |
 | `/sj info <nombre>` | Muestra los detalles de un pad |
 | `/sj tp <nombre>` | Teletranspórtate a un pad |
+| `/sj near [radio]` | Lista los pads cercanos a ti (radio por defecto: 20 bloques) |
+| `/sj stats` | Estadísticas de lanzamientos y pads más usados |
 | `/sj setpower <nombre> <valor>` | Cambia la fuerza horizontal de un pad |
 | `/sj setvertical <nombre> <valor>` | Cambia la fuerza vertical de un pad |
+| `/sj setcooldown <pad> <ms\|default>` | Cooldown propio del pad |
+| `/sj setcommand <pad> <comando...\|none>` | Comando de consola al usar el pad (placeholder `%player%`) |
 | `/sj setroute <pad> <ruta\|none>` | Haz que un pad lleve volando por una ruta (o vuelva a ser un pad normal) |
 | `/sj setdirection <pad> <look\|here>` | Lanzar hacia donde mira el jugador, o siempre hacia donde tú miras |
 | `/sj setsound <pad> <sonido\|default>` | Sonido de lanzamiento por pad |
@@ -78,6 +87,7 @@ Los jugadores que pisen `mipad` volarán por tus waypoints, dejando una estela d
 |---|---|---|
 | `slimejumps.admin` | Acceso a todos los comandos | OP |
 | `slimejumps.use` | Ser lanzado por los jump pads | Todos |
+| `slimejumps.doublejump` | Doble salto (cuando la función está activada) | Todos |
 
 ## Configuración
 
@@ -85,6 +95,10 @@ Los jugadores que pisen `mipad` volarán por tus waypoints, dejando una estela d
 
 ```yaml
 language: es            # en (inglés) o es (español)
+update-checker: true    # Avisa a los admins cuando hay nueva versión
+
+stats:
+  enabled: true         # Contabiliza el uso de pads para /sj stats
 
 pads:
   default-power: 1.6    # Fuerza horizontal por defecto de los pads nuevos
@@ -131,6 +145,22 @@ routes:
       enabled: true
       name: FIREWORK
       count: 30
+
+double-jump:
+  enabled: false        # Doble salto estilo lobby (slimejumps.doublejump)
+  power: 0.9
+  vertical: 0.9
+  cooldown-ms: 500
+  prevent-fall-damage: true
+  sound:
+    enabled: true
+    name: entity.bat.takeoff
+    volume: 1.0
+    pitch: 1.0
+  particles:
+    enabled: true
+    name: CLOUD
+    count: 15
 
 slime-block-mode:
   enabled: false        # Todos los bloques de slime se convierten en pads (modo clásico)

@@ -14,7 +14,12 @@ SlimeJumps adds configurable **jump pads** to your Minecraft server — the laun
 - ✈️ **Flight routes** — link a pad to a route and players who step on it fly along your waypoints to a destination, with a particle trail and arrival effects (perfect for sending players from the lobby to a game area).
 - 🎯 **Per-pad launch power** — horizontal and vertical strength configurable for every pad.
 - 🧭 **Fixed or free direction** — pads can launch players where they look, or always in a fixed direction.
-- 🎨 **Per-pad sound and particle** overrides, on top of the global defaults.
+- 🎨 **Per-pad sound, particle and cooldown** overrides, on top of the global defaults.
+- 🚀 **Double jump** (optional): lobby-style mid-air boost when pressing the jump key, compatible with `/fly` from other plugins.
+- ⌨️ **Per-pad console commands** — run any command when a pad is used (`%player%` placeholder), e.g. send players to another server or give rewards.
+- 📊 **Launch statistics** — `/sj stats` shows total launches and the most used pads.
+- 📍 **`/sj near`** — find the pads around you while building.
+- 🔔 **Update checker** — get notified when a new release is published on GitHub (can be disabled).
 - ✨ **Ambient particles** above each pad so players can spot them (fully configurable).
 - 🛡️ **Fall damage protection** after launches and route landings, plus full damage immunity while flying a route.
 - ⏱️ **Anti-spam cooldown** so pads can't be abused.
@@ -49,8 +54,12 @@ The main command is `/slimejumps` (aliases: `/sj`, `/jumppads`).
 | `/sj list` | List all pads with their coordinates |
 | `/sj info <name>` | Show the details of a pad |
 | `/sj tp <name>` | Teleport to a pad |
+| `/sj near [radius]` | List pads close to you (default radius: 20 blocks) |
+| `/sj stats` | Launch statistics and the most used pads |
 | `/sj setpower <name> <value>` | Change a pad's horizontal strength |
 | `/sj setvertical <name> <value>` | Change a pad's vertical strength |
+| `/sj setcooldown <pad> <ms\|default>` | Per-pad cooldown override |
+| `/sj setcommand <pad> <command...\|none>` | Console command run when the pad is used (`%player%` placeholder) |
 | `/sj setroute <pad> <route\|none>` | Make a pad fly players along a route (or turn it back into a normal pad) |
 | `/sj setdirection <pad> <look\|here>` | Launch players where they look, or always towards where you are facing |
 | `/sj setsound <pad> <sound\|default>` | Per-pad launch sound |
@@ -78,6 +87,7 @@ Players stepping on `mypad` now fly through your waypoints, leaving a particle t
 |---|---|---|
 | `slimejumps.admin` | Access to all commands | OP |
 | `slimejumps.use` | Being launched by jump pads | Everyone |
+| `slimejumps.doublejump` | Double jumping (when the feature is enabled) | Everyone |
 
 ## Configuration
 
@@ -85,6 +95,10 @@ Players stepping on `mypad` now fly through your waypoints, leaving a particle t
 
 ```yaml
 language: en            # en (English) or es (Spanish)
+update-checker: true    # Notify admins when a new release is out
+
+stats:
+  enabled: true         # Track pad usage for /sj stats
 
 pads:
   default-power: 1.6    # Default horizontal strength for new pads
@@ -131,6 +145,22 @@ routes:
       enabled: true
       name: FIREWORK
       count: 30
+
+double-jump:
+  enabled: false        # Lobby-style double jump (slimejumps.doublejump)
+  power: 0.9
+  vertical: 0.9
+  cooldown-ms: 500
+  prevent-fall-damage: true
+  sound:
+    enabled: true
+    name: entity.bat.takeoff
+    volume: 1.0
+    pitch: 1.0
+  particles:
+    enabled: true
+    name: CLOUD
+    count: 15
 
 slime-block-mode:
   enabled: false        # Every slime block becomes a pad (legacy mode)
