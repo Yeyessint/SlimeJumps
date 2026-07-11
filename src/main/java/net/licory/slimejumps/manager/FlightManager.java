@@ -8,14 +8,17 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -45,6 +48,8 @@ public final class FlightManager implements Listener, Runnable {
     private final SlimeJumpsPlugin plugin;
     private final Map<UUID, Flight> flights = new HashMap<>();
     private final Map<UUID, Long> landingProtection = new HashMap<>();
+    /** Players who quit mid-flight; protected from fall damage on rejoin. */
+    private final Set<UUID> protectOnRejoin = new HashSet<>();
 
     public FlightManager(SlimeJumpsPlugin plugin) {
         this.plugin = plugin;
@@ -296,8 +301,21 @@ public final class FlightManager implements Listener, Runnable {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         UUID id = event.getPlayer().getUniqueId();
-        flights.remove(id);
+        // A player who logs out mid-flight would drop from the sky and take
+        // fall damage on rejoin, so remember to protect their landing.
+        if (flights.remove(id) != null) {
+            protectOnRejoin.add(id);
+        }
         landingProtection.remove(id);
+    }
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        UUID id = event.getPlayer().getUniqueId();
+        if (protectOnRejoin.remove(id)) {
+            long protectionMs = plugin.getConfig().getLong("routes.landing-protection-ms", 5000L);
+            landingProtection.put(id, System.currentTimeMillis() + Math.max(protectionMs, 8000L));
+        }
     }
 
     private static Particle parseParticle(String name, Particle fallback) {

@@ -94,7 +94,6 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
         getServer().getScheduler().runTaskTimer(this, routeEditManager, 10L, 10L);
 
         tutorialManager = new TutorialManager(this);
-        getServer().getPluginManager().registerEvents(tutorialManager, this);
 
         wandListener = new WandListener(this);
         getServer().getPluginManager().registerEvents(wandListener, this);
@@ -128,6 +127,9 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
         }
         if (routeEditManager != null) {
             routeEditManager.reset();
+        }
+        if (tutorialManager != null) {
+            tutorialManager.reset();
         }
         if (padManager != null) {
             padManager.save();
