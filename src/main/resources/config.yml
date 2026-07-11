@@ -106,6 +106,15 @@ routes:
     volume: 0.7
     pitch: 1.0
     interval-ticks: 8
+  collision:
+    # If a flying player gets pressed against a wall or ceiling, first try
+    # to fly up and over the obstacle, and if they stay stuck, hop them
+    # towards the next waypoint so the route never gets a player stuck.
+    enabled: true
+    # Ticks spent trying to climb over before falling back to a hop.
+    climb-ticks: 8
+    # Upward velocity used while climbing over an obstacle.
+    climb-power: 0.6
   arrival:
     # Effects played when a player reaches the end of a route.
     sound:

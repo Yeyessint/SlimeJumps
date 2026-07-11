@@ -2,6 +2,17 @@
 
 All notable changes to SlimeJumps are documented in this file.
 
+## [2.6.0] - 2026-07-10
+
+### Added
+- **Interactive tutorial** (`/sj tutorial`): an 8-step guided walkthrough of the whole plugin with examples, use cases and clickable "try it" buttons. Navigation is done by clicking `[« Back]` / `[Next »]` / `[✔ Finish]` in chat.
+- **Per-player tutorial language**: the tutorial opens with a clickable language picker (English/Spanish), or set it with `/sj tutorial lang <code>` — independent of the server's global language.
+- **Clickable creation menu** (`/sj menu`): create pads, charge pads, preset pads and routes, open the GUI, get the wand or start the tutorial, all by clicking chat buttons.
+- **Route collision handling**: a flying player pressed against a wall or ceiling now automatically climbs over the obstacle, and if still stuck (e.g. boxed in) hops towards the next waypoint — configurable under `routes.collision`.
+
+### Changed
+- Messages system now keeps every shipped language loaded so features can serve a language chosen per player.
+
 ## [2.5.0] - 2026-07-10
 
 ### Added

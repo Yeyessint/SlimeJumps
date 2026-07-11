@@ -4,6 +4,7 @@ import net.licory.slimejumps.SlimeJumpsPlugin;
 import net.licory.slimejumps.model.JumpPad;
 import net.licory.slimejumps.model.Route;
 import net.licory.slimejumps.task.PreviewTask;
+import net.licory.slimejumps.util.ChatUI;
 import net.licory.slimejumps.util.Messages;
 import net.licory.slimejumps.util.TrajectorySimulator;
 import org.bukkit.Location;
@@ -32,10 +33,12 @@ public final class SlimeJumpsCommand implements TabExecutor {
     private static final String ADMIN_PERMISSION = "slimejumps.admin";
     private static final Pattern NAME_PATTERN = Pattern.compile("[A-Za-z0-9_-]{1,32}");
     private static final List<String> SUBCOMMANDS = Arrays.asList(
-            "create", "remove", "list", "info", "tp", "gui", "near", "stats", "wand",
-            "preview", "toggle", "rename", "setpower", "setvertical", "setcooldown",
+            "create", "remove", "list", "info", "tp", "gui", "menu", "near", "stats", "wand",
+            "preview", "tutorial", "toggle", "rename", "setpower", "setvertical", "setcooldown",
             "setcommand", "seteffect", "setmessage", "sethologram", "setcharge",
             "setroute", "setdirection", "setsound", "setparticle", "route", "reload", "help");
+    private static final List<String> TUTORIAL_SUBCOMMANDS = Arrays.asList(
+            "next", "back", "stop", "lang");
     private static final List<String> ROUTE_SUBCOMMANDS = Arrays.asList(
             "create", "addpoint", "delpoint", "edit", "remove", "list", "info");
     private static final List<String> PAD_NAME_SUBCOMMANDS = Arrays.asList(
@@ -81,6 +84,8 @@ public final class SlimeJumpsCommand implements TabExecutor {
             case "near" -> handleNear(sender, args);
             case "stats" -> handleStats(sender);
             case "gui" -> handleGui(sender);
+            case "menu" -> handleMenu(sender);
+            case "tutorial" -> handleTutorial(sender, args);
             case "toggle" -> handleToggle(sender, args);
             case "rename" -> handleRename(sender, args);
             case "seteffect" -> handleSetEffect(sender, args);
@@ -332,6 +337,67 @@ public final class SlimeJumpsCommand implements TabExecutor {
             return;
         }
         plugin.getPadListGui().open(player, 0);
+    }
+
+    private void handleTutorial(CommandSender sender, String[] args) {
+        Messages messages = plugin.getMessages();
+        if (!(sender instanceof Player player)) {
+            messages.send(sender, "players-only");
+            return;
+        }
+        if (args.length < 2) {
+            plugin.getTutorialManager().open(player);
+            return;
+        }
+        switch (args[1].toLowerCase(Locale.ROOT)) {
+            case "next" -> plugin.getTutorialManager().next(player);
+            case "back" -> plugin.getTutorialManager().back(player);
+            case "stop" -> plugin.getTutorialManager().stop(player);
+            case "lang", "language" -> {
+                if (args.length < 3) {
+                    plugin.getTutorialManager().showLanguagePicker(player);
+                } else {
+                    plugin.getTutorialManager().setLanguage(player, args[2]);
+                }
+            }
+            default -> plugin.getTutorialManager().open(player);
+        }
+    }
+
+    /** Sends a clickable palette for creating pads and routes from chat. */
+    private void handleMenu(CommandSender sender) {
+        Messages messages = plugin.getMessages();
+        if (!(sender instanceof Player player)) {
+            messages.send(sender, "players-only");
+            return;
+        }
+
+        for (String line : messages.getList("menu-header")) {
+            player.sendMessage(line);
+        }
+        menuRow(player, "menu-create-pad", "/sj create ", true);
+        menuRow(player, "menu-create-charge", "/sj create chargepad --preset cannon", false);
+        menuRow(player, "menu-preset-parkour", "/sj create parkour1 --preset parkour", false);
+        menuRow(player, "menu-preset-cannon", "/sj create cannon1 --preset cannon", false);
+        menuRow(player, "menu-preset-bounce", "/sj create bounce1 --preset bounce", false);
+        menuRow(player, "menu-create-route", "/sj route create ", true);
+        menuRow(player, "menu-open-gui", "/sj gui", false);
+        menuRow(player, "menu-get-wand", "/sj wand", false);
+        menuRow(player, "menu-tutorial", "/sj tutorial", false);
+    }
+
+    /**
+     * Renders one clickable menu row. When {@code suggest} is true the
+     * command is placed in the chat box for the player to finish typing
+     * (e.g. the pad name); otherwise it runs immediately.
+     */
+    private void menuRow(Player player, String key, String command, boolean suggest) {
+        Messages messages = plugin.getMessages();
+        String label = messages.get(key);
+        String hover = messages.get(key + "-hover");
+        ChatUI.send(player, suggest
+                ? ChatUI.suggestButton(label, command, hover)
+                : ChatUI.runButton(label, command, hover));
     }
 
     private void handleToggle(CommandSender sender, String[] args) {
@@ -1007,11 +1073,17 @@ public final class SlimeJumpsCommand implements TabExecutor {
             if (sub.equals("route")) {
                 return filter(ROUTE_SUBCOMMANDS, args[1]);
             }
+            if (sub.equals("tutorial")) {
+                return filter(TUTORIAL_SUBCOMMANDS, args[1]);
+            }
             if (PAD_NAME_SUBCOMMANDS.contains(sub)) {
                 return filter(padNames(), args[1]);
             }
         }
         if (args.length == 3) {
+            if (sub.equals("tutorial") && args[1].equalsIgnoreCase("lang")) {
+                return filter(plugin.getMessages().availableLanguages(), args[2]);
+            }
             switch (sub) {
                 case "setroute" -> {
                     List<String> options = new ArrayList<>(routeNames());
