@@ -2,6 +2,14 @@
 
 All notable changes to SlimeJumps are documented in this file.
 
+## [2.6.1] - 2026-07-11
+
+### Fixed
+- Players who log out while flying a route are now protected from fall damage when they rejoin, instead of dropping from the sky and taking damage.
+
+### Changed
+- The tutorial now remembers each player's progress and chosen language for the whole server session, so leaving mid-tutorial and coming back resumes exactly where you left off. Running `/sj tutorial next`/`back` without an active tutorial safely opens the language picker.
+
 ## [2.6.0] - 2026-07-10
 
 ### Added

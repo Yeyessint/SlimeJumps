@@ -4,9 +4,6 @@ import net.licory.slimejumps.SlimeJumpsPlugin;
 import net.licory.slimejumps.util.ChatUI;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,8 +18,13 @@ import java.util.UUID;
  * that explain the plugin with examples and clickable "try it" buttons.
  * Navigation is done entirely by clicking buttons in chat, which run
  * {@code /sj tutorial next|back|stop} behind the scenes.
+ * <p>
+ * Progress and the chosen language are kept in memory for the whole
+ * server session (they are not cleared on quit), so a player who leaves
+ * mid-tutorial resumes exactly where they left off — in the same
+ * language — when they run {@code /sj tutorial} again after rejoining.
  */
-public final class TutorialManager implements Listener {
+public final class TutorialManager {
 
     /** Number of tutorial steps (message keys tutorial-1..N-title/-body). */
     public static final int STEP_COUNT = 8;
@@ -86,6 +88,10 @@ public final class TutorialManager implements Listener {
 
     /** Advances to the next step, finishing the tutorial past the last one. */
     public void next(Player player) {
+        if (!hasActiveTutorial(player)) {
+            open(player);
+            return;
+        }
         int current = step.getOrDefault(player.getUniqueId(), 0);
         if (current + 1 >= STEP_COUNT) {
             finish(player);
@@ -96,8 +102,17 @@ public final class TutorialManager implements Listener {
 
     /** Goes back one step (clamped at the first). */
     public void back(Player player) {
+        if (!hasActiveTutorial(player)) {
+            open(player);
+            return;
+        }
         int current = step.getOrDefault(player.getUniqueId(), 0);
         showStep(player, Math.max(0, current - 1));
+    }
+
+    /** Whether the player has picked a language and started the tutorial. */
+    private boolean hasActiveTutorial(Player player) {
+        return language.containsKey(player.getUniqueId());
     }
 
     /** Ends the tutorial for a player. */
@@ -113,6 +128,12 @@ public final class TutorialManager implements Listener {
         for (String line : plugin.getMessages().getListIn(lang, "tutorial-finished")) {
             player.sendMessage(line);
         }
+    }
+
+    /** Frees a player's tutorial state (called on server shutdown/reload). */
+    public void reset() {
+        step.clear();
+        language.clear();
     }
 
     private void showStep(Player player, int index) {
@@ -159,12 +180,5 @@ public final class TutorialManager implements Listener {
                 back,
                 ChatUI.text("  &7" + (index + 1) + "&8/&7" + STEP_COUNT + "  "),
                 forward);
-    }
-
-    @EventHandler
-    public void onQuit(PlayerQuitEvent event) {
-        UUID id = event.getPlayer().getUniqueId();
-        step.remove(id);
-        language.remove(id);
     }
 }
