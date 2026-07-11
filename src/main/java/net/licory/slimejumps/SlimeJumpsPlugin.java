@@ -13,6 +13,7 @@ import net.licory.slimejumps.manager.JumpPadManager;
 import net.licory.slimejumps.manager.RouteEditManager;
 import net.licory.slimejumps.manager.RouteManager;
 import net.licory.slimejumps.manager.StatsManager;
+import net.licory.slimejumps.manager.TutorialManager;
 import net.licory.slimejumps.task.ParticleTask;
 import net.licory.slimejumps.util.Messages;
 import net.licory.slimejumps.util.UpdateChecker;
@@ -47,6 +48,7 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
     private HologramManager hologramManager;
     private ChargeManager chargeManager;
     private RouteEditManager routeEditManager;
+    private TutorialManager tutorialManager;
     private WandListener wandListener;
     private JumpPadListener jumpPadListener;
     private PadListGui padListGui;
@@ -90,6 +92,9 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
         routeEditManager = new RouteEditManager(this);
         getServer().getPluginManager().registerEvents(routeEditManager, this);
         getServer().getScheduler().runTaskTimer(this, routeEditManager, 10L, 10L);
+
+        tutorialManager = new TutorialManager(this);
+        getServer().getPluginManager().registerEvents(tutorialManager, this);
 
         wandListener = new WandListener(this);
         getServer().getPluginManager().registerEvents(wandListener, this);
@@ -227,6 +232,10 @@ public final class SlimeJumpsPlugin extends JavaPlugin {
 
     public RouteEditManager getRouteEditManager() {
         return routeEditManager;
+    }
+
+    public TutorialManager getTutorialManager() {
+        return tutorialManager;
     }
 
     public JumpPadListener getJumpPadListener() {

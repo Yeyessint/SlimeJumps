@@ -33,6 +33,8 @@ public final class FlightManager implements Listener, Runnable {
         final List<Location> waypoints;
         int index;
         int ticks;
+        int stuckTicks;
+        Location lastPosition;
         final long startedAt = System.currentTimeMillis();
 
         Flight(List<Location> waypoints) {
@@ -115,7 +117,19 @@ public final class FlightManager implements Listener, Runnable {
                 if (!advance(flight)) {
                     iterator.remove();
                     release(player, true);
+                } else {
+                    flight.stuckTicks = 0;
                 }
+                continue;
+            }
+
+            // Collision handling: if the player barely moved last tick, they
+            // are pressed against geometry — steer over or around it.
+            updateStuck(flight, current, speed);
+            if (flight.stuckTicks > 0
+                    && plugin.getConfig().getBoolean("routes.collision.enabled", true)
+                    && handleCollision(player, flight, target, speed)) {
+                spawnTrail(player);
                 continue;
             }
 
@@ -125,6 +139,77 @@ public final class FlightManager implements Listener, Runnable {
             spawnTrail(player);
             playFlightSound(player, flight);
         }
+    }
+
+    /**
+     * Tracks how many consecutive ticks the player has failed to make
+     * real progress, which indicates a collision with a wall or ceiling.
+     */
+    private void updateStuck(Flight flight, Location current, double speed) {
+        Location last = flight.lastPosition;
+        if (last != null && last.getWorld() == current.getWorld()) {
+            double mdx = current.getX() - last.getX();
+            double mdy = current.getY() - last.getY();
+            double mdz = current.getZ() - last.getZ();
+            double moved = Math.sqrt(mdx * mdx + mdy * mdy + mdz * mdz);
+            if (moved < speed * 0.35D) {
+                flight.stuckTicks++;
+            } else {
+                flight.stuckTicks = 0;
+            }
+        }
+        flight.lastPosition = current.clone();
+    }
+
+    /**
+     * Recovers from a collision. First tries to fly up and over the
+     * obstacle; if the player stays stuck for too long (e.g. boxed in),
+     * teleport-hops a short distance towards the next waypoint to keep
+     * the route going.
+     *
+     * @return {@code true} if this method already handled the player's
+     *         movement this tick
+     */
+    private boolean handleCollision(Player player, Flight flight, Location target, double speed) {
+        int climbTicks = plugin.getConfig().getInt("routes.collision.climb-ticks", 8);
+        Location current = player.getLocation();
+
+        if (flight.stuckTicks <= climbTicks) {
+            // Rise over the wall while keeping a little push towards the target.
+            double climb = plugin.getConfig().getDouble("routes.collision.climb-power", 0.6D);
+            double dx = target.getX() - current.getX();
+            double dz = target.getZ() - current.getZ();
+            double horizontal = Math.sqrt(dx * dx + dz * dz);
+            Vector velocity = horizontal < 0.01D
+                    ? new Vector(0.0D, climb, 0.0D)
+                    : new Vector(dx / horizontal * speed * 0.35D, climb, dz / horizontal * speed * 0.35D);
+            player.setVelocity(velocity);
+            player.setFallDistance(0.0F);
+            return true;
+        }
+
+        // Still stuck after climbing: hop towards the waypoint through the
+        // obstacle, but only land in open space.
+        double dx = target.getX() - current.getX();
+        double dy = target.getY() - current.getY();
+        double dz = target.getZ() - current.getZ();
+        double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (distance > 0.01D) {
+            double hop = Math.min(distance, Math.max(2.0D, speed * 2.0D));
+            Location destination = current.clone().add(
+                    dx / distance * hop, dy / distance * hop, dz / distance * hop);
+            destination.setYaw(current.getYaw());
+            destination.setPitch(current.getPitch());
+            if (!destination.getBlock().getType().isSolid()) {
+                player.teleport(destination);
+                player.setFallDistance(0.0F);
+            } else {
+                // No safe hop: skip to the next waypoint so the route continues.
+                advance(flight);
+            }
+        }
+        flight.stuckTicks = 0;
+        return true;
     }
 
     /** Plays the periodic whoosh while a player flies a route. */

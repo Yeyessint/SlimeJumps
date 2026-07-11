@@ -12,6 +12,9 @@ SlimeJumps adds configurable **jump pads** to your Minecraft server — the laun
 
 ## Features
 
+- 🎓 **Interactive tutorial** — `/sj tutorial` walks you through the whole plugin step by step, with examples and clickable "try it" buttons. Pick your own language (English/Spanish) right in the tutorial.
+- 🖱️ **Clickable chat menu** — `/sj menu` lets you create pads and routes by clicking, no typing needed.
+- 🧱 **Smart route collision handling** — flying players who hit a wall automatically climb over it (or hop past it), so nobody gets stuck mid-route.
 - ⚡ **Named jump pads** on any block, created with a single command.
 - 👁️ **Visual route editor** — `/sj route edit` shows numbered waypoints and the flight path drawn with particles; the wand adds and removes waypoints with a click. *No other jump pad plugin has this.*
 - 📐 **Trajectory preview** — `/sj preview <pad>` draws the exact launch parabola with particles, so you tune the power seeing where players will land.
@@ -64,6 +67,8 @@ The main command is `/slimejumps` (aliases: `/sj`, `/jumppads`).
 
 | Command | Description |
 |---|---|
+| `/sj tutorial` | Interactive step-by-step tutorial (with in-tutorial language picker) |
+| `/sj menu` | Clickable chat menu to create pads and routes |
 | `/sj create <name> [power] [vertical]` | Create a pad on the block you are standing on |
 | `/sj create <name> --preset <preset>` | Create a pad from a preset (`parkour`, `cannon`, `bounce`, or your own) |
 | `/sj wand` | Get the editor wand — left click creates a pad, right click removes one |
